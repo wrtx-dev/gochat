@@ -1,0 +1,79 @@
+name: Build Windows App
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        description: "tag or branch or commit id(sha1 value)"
+        required: true
+        type: string
+        default: "main"
+
+jobs:
+  release:
+    name: Release Windows App
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform:
+          - windows/amd64
+          - windows/arm64
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{inputs.commit_id}}
+
+      - name: Get platform tag
+        id: get_platform
+        shell: bash
+        run: |
+          tag=$(echo ${{ matrix.platform }} | sed -e 's/\//_/g' -e 's/amd64/x64/g')
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Get platform name
+        id: get_platform_name
+        shell: bash
+        run: |
+          pname=$(echo "${{ matrix.platform }}" | sed 's/windows\///g')
+          echo "pname=$pname" >> "$GITHUB_OUTPUT"
+
+      - name: Set version tag
+        id: set_app_version
+        shell: bash
+        run: |
+          version=${{ inputs.commit_id }}
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        shell: bash
+        run: npm i -g pnpm
+
+      - name: install deps
+        shell: bash
+        run: pnpm i
+
+      - name: Build Windows installer
+        shell: bash
+        run: |
+          pnpm run build:win
+
+
+      - name: Rename installer
+        working-directory: ./dist
+        shell: bash
+        run: |
+          mv -v $(ls *setup.exe) "gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe"
+
+      - name: "upload"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe
+          path: |
+            ./dist/gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe
+
