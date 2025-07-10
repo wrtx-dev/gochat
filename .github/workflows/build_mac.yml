@@ -8,6 +8,10 @@ on:
         required: true
         type: string
         default: "main"
+      release:
+        description: "设置是否发布版本"
+        type: boolean
+        default: false
 
 
 jobs:
@@ -70,3 +74,11 @@ jobs:
           name: GoChat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}.dmg
           path: |
             ./dist/GoChat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}.dmg
+
+      - name: Upload release asset (DMG Package)
+        uses: softprops/action-gh-release@v1
+        if: ${{inputs.release == true}}
+        with:
+          tag_name: ${{ inputs.commit_id }}
+          files: ./dist/GoChat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}.dmg
+          token: ${{ secrets.GITHUB_TOKEN }}
