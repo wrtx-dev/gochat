@@ -8,6 +8,10 @@ on:
         required: true
         type: string
         default: "main"
+      release:
+        description: "设置是否发布版本"
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -76,4 +80,12 @@ jobs:
           name: gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe
           path: |
             ./dist/gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe
+
+      - name: Upload release asset (exe)
+        uses: softprops/action-gh-release@v1
+        if: ${{inputs.release == true}}
+        with:
+          tag_name: ${{ inputs.commit_id }}
+          files: ./dist/gochat-${{ steps.set_app_version.outputs.version }}_${{ steps.get_platform.outputs.tag }}-setup.exe
+          token: ${{ secrets.GITHUB_TOKEN }}
 
