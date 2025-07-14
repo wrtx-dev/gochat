@@ -84,6 +84,7 @@
         "enableDefault": "默认启用",
         "stdio": "标准IO",
         "sse": "SSE",
+        "httpStream":"http stream",
         "cancel": "取消",
         "delete": "删除",
         "noServers": "尚未添加MCP服务器",
@@ -135,6 +136,8 @@
     "ytfps":"FPS(frames per second)",
     "app":{
       "about":"关于",
+      "aboutTitle":"基于Gemini API的跨平台AI助手",
+      "aboutDescription":"提供智能对话、代码生成、内容创作等AI功能",
       "services":"服务",
       "hide":"隐藏 GoChat",
       "hideOthers":"隐藏其他",

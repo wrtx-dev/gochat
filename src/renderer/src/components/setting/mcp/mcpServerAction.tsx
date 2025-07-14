@@ -81,21 +81,23 @@ const McpServerAction = forwardRef(({ }: {}, ref: Ref<any>) => {
                             <Label htmlFor={`stdio`} className="text-xs font-semibold">{t("mcpServer.stdio")}</Label>
                             <RadioGroupItem id={`sse`} value="sse">{t("mcpServer.sse")}</RadioGroupItem>
                             <Label htmlFor={`sse`} className="text-xs font-semibold">{t("mcpServer.sse")}</Label>
+                            <RadioGroupItem id={`sse`} value="httpstream">{t("mcpServer.httpStream")}</RadioGroupItem>
+                            <Label htmlFor={`sse`} className="text-xs font-semibold">{t("mcpServer.httpStream")}</Label>
                         </div>
                     </RadioGroup>
                     {mcpServer.type === "stdio" ? <>
-                        <span className="text-xs font-semibold">{t("mcpServer.cmd")}</span>
+                        {/* <span className="text-xs font-semibold">{t("mcpServer.cmd")}</span>
                         <Input
                             className="comm-input"
                             value={mcpServer.cmd.split(" ")[0]}
                             onChange={(e) => setMcpServer(prev => ({ ...prev, cmd: [e.target.value, ...prev.cmd.split(" ").slice(1)].join(" ") }))}
                             spellCheck={false}
-                        />
-                        <span className="text-xs font-semibold">{t("mcpServer.args")}</span>
+                        /> */}
+                        <span className="text-xs font-semibold">{t("mcpServer.cmd")}</span>
                         <Textarea
                             className="comm-textarea"
-                            value={mcpServer.cmd.indexOf(" ") > 0 ? mcpServer.cmd.split(" ").slice(1).join(" ") : ""}
-                            onChange={(e) => setMcpServer(prev => ({ ...prev, cmd: [prev.cmd.split(" ")[0], ...e.target.value.split(" ")].join(" ") }))}
+                            value={mcpServer.cmd.length > 0 ? mcpServer.cmd : ""}
+                            onChange={(e) => setMcpServer(prev => ({ ...prev, cmd: e.target.value }))}
                             spellCheck={false}
                         />
                         <span className="text-xs font-semibold">{t("mcpServer.env")}</span>

@@ -1,6 +1,6 @@
 import { Button } from "@renderer/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Home, Settings } from "lucide-react"
+import { Home, Settings, Info } from "lucide-react"
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@renderer/components/ui/tabs";
 import { Save } from "lucide-react";
@@ -12,6 +12,7 @@ import { uiState } from "@renderer/lib/state/uistate";
 import TrafficLight from "@renderer/components/titlebar/trafficLight";
 import McpSetting from "@renderer/components/setting/mcpSetting";
 import mcpSvg from "@renderer/assets/mcp.svg"
+import AboutInfo from "@renderer/components/setting/about";
 export default function SettingPage({ init }: { init?: (conf: Config) => void }) {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -40,10 +41,15 @@ export default function SettingPage({ init }: { init?: (conf: Config) => void })
                     </div>
                     <TabsList className="titlebar-tabs bg-transparent">
                         <TabsTrigger value="generalSetting" className="font-serif font-semibold data-[state=active]:bg-emerald-500/50">
-                            <Settings strokeWidth={1} />{t("generalSettings")}</TabsTrigger>
+                            <Settings strokeWidth={1} />{t("generalSettings")}
+                        </TabsTrigger>
                         <TabsTrigger value="mcpSetting" className="font-serif font-semibold data-[state=active]:bg-emerald-500/50">
                             <img src={mcpSvg} alt="" />
                             {t("mcpSettings")}
+                        </TabsTrigger>
+                        <TabsTrigger value="aboutinfo" className="font-serif font-semibold data-[state=active]:bg-emerald-500/50">
+                            <Info strokeWidth={1.5} />
+                            {t("app.about")}
                         </TabsTrigger>
                     </TabsList>
                     <div className="w-20 h-full inline-flex flex-row items-center justify-end py-1 pe-2 gap-2" >
@@ -75,6 +81,9 @@ export default function SettingPage({ init }: { init?: (conf: Config) => void })
                 </TabsContent>
                 <TabsContent value="mcpSetting" className="border-t border-neutral-900/20">
                     <McpSetting />
+                </TabsContent>
+                <TabsContent value="aboutinfo" className="w-full h-full p-2">
+                    <AboutInfo />
                 </TabsContent>
             </Tabs>
         </div>

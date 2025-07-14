@@ -127,10 +127,16 @@
       "dynThought": "動的思考",
       "thoughtCost": "思考予算",
       "thoughtCostInfo": "gemini-2.5-proは思考モードを無効にできません、最小思考予算は128トークンです、この値より小さい値を設定した場合、モデルがgemini-2.5-proシリーズの場合は128トークンの予算に設定されます",
-      "namedSessionModel": "セッション命名モデル"
+      "namedSessionModel": "セッション命名モデル",
+      "messageSendKey": "メッセージ送信キー",
+      "createTray": "トレイアイコンを作成",
+      "createQuickWindow": "クイックウィンドウを作成",
+      "showQuickWin": "クイックウィンドウの使用法を表示"
     },
     "app":{
       "about":"GoChatについて",
+      "aboutTitle": "Gemini APIベースのクロスプラットフォームAIアシスタント",
+      "aboutDescription": "インテリジェントな会話、コード生成、コンテンツ作成などのAI機能を提供",
       "services":"サービス",
       "hide":"GoChatを隠す",
       "hideOthers":"他を隠す",

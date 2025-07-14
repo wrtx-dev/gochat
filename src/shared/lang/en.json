@@ -127,10 +127,16 @@
       "dynThought":"Dynamic thought",
       "thoughtCost":"Thought budget",
       "thoughtCostInfo":"gemini-2.5-pro cannot disable thought mode, minimum thought budget is 128tokens, if set below this value when model is gemini-2.5-pro series it will be set to 128tokens budget",
-      "namedSessionModel":"Session named model"
+      "namedSessionModel":"Session named model",
+      "messageSendKey": "Message send key",
+      "createTray": "Create tray icon", 
+      "createQuickWindow": "Create quick window",
+      "showQuickWin": "Show quick window usage"
     },
     "app":{
       "about":"About",
+      "aboutTitle": "Cross-platform AI assistant based on Gemini API",
+      "aboutDescription": "Provides AI features like intelligent conversation, code generation, content creation",
       "services":"Services",
       "hide":"Hide GoChat",
       "hideOthers":"Hide Others",

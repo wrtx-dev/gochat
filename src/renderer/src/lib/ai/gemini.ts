@@ -257,9 +257,6 @@ class Chatter {
                     continue;
                 }
                 for (const v of chunk.candidates) {
-                    if (v.finishReason && v.finishReason !== FinishReason.STOP) {
-                        console.log("finished reason:", v.finishReason)
-                    }
                     hasContent = true;
                     const modelMessage: rawMessage = {
                         content: v.content,
@@ -296,6 +293,10 @@ class Chatter {
                     }
                     if (!this.tmpSession) {
                         await addRawMessage(modelMessage);
+                    }
+                    if (v.finishReason && v.finishReason !== FinishReason.STOP) {
+                        console.log("finished reason:", v.finishReason);
+                        throw new Error("unnormal finished reason: " + v.finishReason);
                     }
                 }
             }
@@ -439,6 +440,7 @@ class Chatter {
                         response: r,
                     }
                 });
+                console.log("run mcp tool:", fun.name, "response:", r, "parts:", parts);
             }
             const funcMsg: rawMessage = {
                 content: { parts: parts, role: "user" },
@@ -677,7 +679,6 @@ class Chatter {
                         if (functions) {
                             this.config!.tools = [{ functionDeclarations: functions }];
                         }
-
                         break;
                     case "search":
                         this.config!.tools = [...this.config!.tools!, { googleSearch: {} }];

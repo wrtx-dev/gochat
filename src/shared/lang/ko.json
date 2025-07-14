@@ -127,10 +127,16 @@
       "dynThought": "동적 생각",
       "thoughtCost": "생각 예산",
       "thoughtCostInfo": "gemini-2.5-pro는 생각 모드를 비활성화할 수 없으며, 최소 생각 예산은 128토큰입니다. 이 값보다 작게 설정하면 모델이 gemini-2.5-pro 시리즈일 경우 128토큰 예산으로 설정됩니다",
-      "namedSessionModel": "세션 이름 지정 모델"
+      "namedSessionModel": "세션 이름 지정 모델",
+      "messageSendKey": "메시지 전송 키",
+      "createTray": "트레이 아이콘 생성",
+      "createQuickWindow": "빠른 창 생성",
+      "showQuickWin": "빠른 창 사용법 표시"
     },
     "app":{
       "about":"GoChat 정보",
+      "aboutTitle": "Gemini API 기반의 크로스 플랫폼 AI 어시스턴트",
+      "aboutDescription": "지능적인 대화, 코드 생성, 콘텐츠 제작 등의 AI 기능 제공",
       "services":"서비스",
       "hide":"GoChat 숨기기",
       "hideOthers":"다른 창 숨기기",

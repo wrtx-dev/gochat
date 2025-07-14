@@ -312,8 +312,7 @@ const FunctionToolMenu = () => {
                                         let functions: undefined | any = undefined;
 
                                         functions = await listMcpTools();
-                                        console.log("functions\n", functions);
-                                        useTool(newTools);
+                                        useTool(newTools, functions);
 
                                         resolve(true);
                                     } catch (e) {
