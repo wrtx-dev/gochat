@@ -1,6 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js"
 import { mcpServerInfo } from "@shared/types/mcp";
 import { FunctionDeclaration, Type, FunctionCall } from "@google/genai"
@@ -59,6 +60,11 @@ export class McpClients {
                         this.clientMap.set(server.uuid, { client, transport, server })
                     }
                     break;
+                case "http stream":
+                    {
+                        const transport = new StreamableHTTPClientTransport(new URL(server.url));
+                        this.clientMap.set(server.uuid, { client, transport, server })
+                    }
             }
         }
         if (this.clientMap.keys().toArray().length < 1) {
@@ -225,6 +231,12 @@ export class McpClients {
                     this.clientMap.set(server.uuid, clientItem!);
                 }
                 break;
+            case "http stream":
+                {
+                    const transport = new StreamableHTTPClientTransport(new URL(server.url));
+                    clientItem = { client, transport, server };
+                    this.clientMap.set(server.uuid, clientItem!);
+                }
         }
         await clientItem.client.connect(clientItem.transport);
         await this.collectTools(clientItem);
