@@ -3,7 +3,7 @@ import { useState, ComponentProps, memo, useEffect, useRef, useCallback, useLayo
 import MarkdownMessage from "@renderer/components/markdown/markdownMessage";
 import { Alert, AlertDescription, AlertTitle } from "@renderer/components/ui/alert";
 import { AlertCircle, FileAudio, FileImage, FileQuestion, FileText, FileVideo, Copy, SquareDashedMousePointer, FileDown } from "lucide-react";
-import { loadSession, registerAddMessage, registerClearMessages, registerFinishedLoadSession } from "@renderer/lib/ai/gemini";
+import { loadSession, registerAddMessage, registerClearMessages, registerFinishedLoadSession, registerLoadMessageList } from "@renderer/lib/ai/gemini";
 import { getFileIconType } from "@renderer/lib/util/files";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { uiState } from "@renderer/lib/state/uistate";
@@ -62,6 +62,12 @@ export default function MessageList() {
         registerClearMessages(() => {
             setMessages([]);
             setSpaceHeight(0);
+        });
+        registerLoadMessageList((messages: Message[], id: string) => {
+            if (id !== currentSessionID) {
+                return;
+            }
+            setMessages(messages);
         });
     }, [currentSessionID]);
     const storeSessionid = () => {

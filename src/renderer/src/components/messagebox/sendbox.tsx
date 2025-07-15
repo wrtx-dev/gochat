@@ -449,7 +449,7 @@ const YoutubeURIUploader = forwardRef(({ addURL }: { addURL: (info: FileInfo) =>
                                 setUrl("");
                                 setFps(undefined);
                                 setStartTime(undefined);
-                                setStartTime(undefined);
+                                setStopTime(undefined);
                             }}
                             size={"sm"}
                             className="text-xs py-1 px-2 h-6"

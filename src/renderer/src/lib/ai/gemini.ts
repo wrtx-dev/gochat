@@ -13,6 +13,7 @@ interface callbackRegister {
     abortMessage?: (key: string, cancel: MessageCancelFn) => void,
     deleteAbortMessage?: (key: string) => void,
     finsedLoadSession?: () => void,
+    loadMessageList?: (messages: Message[], id: string) => void,
 }
 
 let callbacks: callbackRegister = {};
@@ -163,5 +164,12 @@ export function registerDeleteAbortMessage(fn: (key: string) => void) {
     callbacks.deleteAbortMessage = fn;
     if (chatter) {
         chatter.registerDeleteAbortMessage(fn);
+    }
+}
+
+export function registerLoadMessageList(fn: (messages: Message[], id: string) => void) {
+    callbacks.loadMessageList = fn;
+    if (chatter) {
+        chatter.registerLoadMessageList(fn);
     }
 }

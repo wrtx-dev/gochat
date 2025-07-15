@@ -28,6 +28,10 @@ function createWindow(): void {
     }
   })
 
+  if (!app.requestSingleInstanceLock()) {
+    app.exit(0);
+  }
+
   mainWindow.on('ready-to-show', () => {
     mainWindow!.show();
     mainWindowIpcInit(mainWindow!);

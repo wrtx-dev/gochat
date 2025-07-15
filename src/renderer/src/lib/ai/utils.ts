@@ -1,7 +1,8 @@
 import { Content, FunctionCall, GroundingMetadata, Part } from "@google/genai";
-import { FileInfo } from "@shared/types/message";
+import { FileInfo, Message } from "@shared/types/message";
 import { isYoutubeURI } from "../util/misc";
 import { getMimeType, readFile } from "../util/files";
+import { getRawMessageBySessionID } from "../data/db";
 
 
 export function createMessageText(content?: Content, groundData?: GroundingMetadata) {
@@ -101,4 +102,67 @@ export async function genFileContent(msg: string, files?: FileInfo[]) {
         contents = [{ text: msg }, ...contents]
     }
     return { fileInfos, contents }
+}
+
+export async function createMessageListFromRawMessage(id: string) {
+    let messages: Message[] = [];
+    const rawMessages = await getRawMessageBySessionID(id);
+    let messageTurn = 0;
+    let tmpMessage: Message | undefined = undefined;
+    let role: undefined | string = undefined;
+    let isNew = false;
+    for (const rawMsg of rawMessages) {
+        if (rawMsg.role && rawMsg.role != role) {
+            messageTurn += rawMsg.role === "user" ? 1 : 0;
+            isNew = true;
+            role = rawMsg.role;
+            if (tmpMessage) {
+                messages = [...messages, { ...tmpMessage }];
+            }
+            tmpMessage = undefined;
+        }
+        const { thinking, msgText, fcall } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
+        if (thinking || msgText || fcall || rawMsg.hasError) {
+            if (!tmpMessage) {
+                tmpMessage = {
+                    role: rawMsg.role === "user" ? "user" : "assistant",
+                    id: "",
+                    message: msgText ? msgText : "",
+                    thinking: thinking,
+                    isError: rawMsg.role !== "user" && rawMsg.hasError ? rawMsg.hasError : false,
+                    errInfo: rawMsg.role !== "user" && rawMsg.hasError && rawMsg.errInfo ? rawMsg.errInfo : "",
+                    files: rawMsg.files ? rawMsg.files : [],
+                    hasFuncCall: fcall ? fcall.length > 0 : false,
+                    funcCalls: fcall ? fcall : [],
+                    finished: true,
+                    sessionID: id,
+                }
+            } else if (tmpMessage) {
+                if (msgText) {
+                    tmpMessage.message += msgText;
+                }
+                if (thinking) {
+                    tmpMessage.thinking = tmpMessage.thinking ? tmpMessage.thinking + thinking : thinking;
+                }
+                if (fcall && fcall.length > 0) {
+                    tmpMessage.hasFuncCall = true;
+                    tmpMessage.funcCalls = [...tmpMessage.funcCalls, ...fcall];
+                }
+                if (rawMsg.hasError) {
+                    tmpMessage.isError = true;
+                    tmpMessage.errInfo = rawMsg.errInfo ? rawMsg.errInfo : "";
+                }
+                if (rawMsg.files && rawMsg.files.length > 0) {
+                    tmpMessage.files = [...tmpMessage.files, ...rawMsg.files];
+                }
+            }
+            if (isNew) {
+                isNew = !isNew;
+            }
+        }
+    }
+    if (tmpMessage) {
+        messages = [...messages, { ...tmpMessage }];
+    }
+    return { messages: messages, messageTurn: messageTurn }
 }

@@ -6,7 +6,7 @@ import { Config } from "../data/config";
 import { FileInfo, Message, MessageCancelFn } from "@shared/types/message";
 import { addNewSessions, addRawMessage, getRawMessageBySessionID, getSession, rawMessage, updateSessionLastUpdate } from "../data/db";
 import { SessionTitleService } from "./geminiCreateSessionTitleService";
-import { createMessageText, genFileContent } from "./utils";
+import { createMessageListFromRawMessage, createMessageText, genFileContent } from "./utils";
 import { runMcpTools } from "./mcpService";
 
 
@@ -32,6 +32,7 @@ export class GeminiClient {
     private deleteCancelMessage?: (key: string) => void;
     private finishedLoadSession?: () => void;
     private tmpSession: boolean;
+    private loadMessageList?: (messages: Message[], id: string) => void;
 
     private prepare() {
         this.session = undefined;
@@ -432,44 +433,11 @@ export class GeminiClient {
 
 
     private async setHistoryMessage(s: session) {
-        this.messageTurn = 0;
-        let isNew = false;
-        let role: undefined | string = undefined;
-        let idx = 0;
-        const rawMessages = await getRawMessageBySessionID(s.uuid);
-        for (const rawMsg of rawMessages) {
-            if (rawMsg.role && rawMsg.role != role) {
-                this.messageTurn = this.messageTurn + 1;
-                isNew = true;
-                role = rawMsg.role;
-            }
-            const { thinking, msgText, fcall } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
-            if (thinking || msgText || fcall || rawMsg.hasError) {
-                let msg: Message = {
-                    role: rawMsg.role === "user" ? "user" : "assistant",
-                    id: "",
-                    message: msgText ? msgText : "",
-                    thinking: thinking,
-                    isError: rawMsg.role !== "user" && rawMsg.hasError ? rawMsg.hasError : false,
-                    errInfo: rawMsg.role !== "user" && rawMsg.hasError && rawMsg.errInfo ? rawMsg.errInfo : "",
-                    files: rawMsg.files ? rawMsg.files : [],
-                    hasFuncCall: fcall ? fcall.length > 0 : false,
-                    funcCalls: fcall ? fcall : [],
-                    finished: true,
-                    sessionID: s.uuid,
-                };
-                if (this.msgCtrl) {
-                    this.msgCtrl(msg, isNew);
-                }
-                if (isNew) {
-                    isNew = !isNew;
-                }
-            }
-            idx++;
+        const { messages, messageTurn } = await createMessageListFromRawMessage(s.uuid);
+        if (this.loadMessageList) {
+            this.loadMessageList(messages, s.uuid);
         }
-        if (this.messageTurn > 1) {
-            this.messageTurn /= 2;
-        }
+        this.messageTurn = messageTurn;
     }
 
     public async loadSession(id: string) {
@@ -479,6 +447,9 @@ export class GeminiClient {
             await this.resetMessages();
             this.session = await ChatSession.createSession(this.client, this.conf!, session, this.model);
             await this.changeCurrenSession(session);
+            const r = await createMessageListFromRawMessage(id);
+            console.log("message turn:", r.messageTurn);
+            console.log("message list:", r.messages);
             await this.setHistoryMessage(session);
             this.loadFinished();
         }
@@ -521,5 +492,9 @@ export class GeminiClient {
 
     public registerFinishedLoadSession(fn: () => void) {
         this.finishedLoadSession = fn;
+    }
+
+    public registerLoadMessageList(fn: (messages: Message[], id: string) => void) {
+        this.loadMessageList = fn;
     }
 }
