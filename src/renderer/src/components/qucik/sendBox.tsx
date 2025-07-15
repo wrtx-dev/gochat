@@ -141,7 +141,6 @@ export default function QuickSendBox() {
                         if (messageText.length === 0) {
                             return;
                         }
-                        console.log("gconf:", gconf);
                         switch (gconf!.sendKey) {
                             case EnumMessageSendKey.Enter:
                                 sendMessageAction();

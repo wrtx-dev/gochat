@@ -107,7 +107,6 @@ export default function SessionItemList({ onChangeSession }: { onChangeSession: 
                         filter={filter}
                         key="sessionList"
                         contextMenuItemHandler={(action, session) => {
-                            console.log("action:", action);
                             switch (action) {
                                 case "del":
                                     if (session) {

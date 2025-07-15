@@ -173,7 +173,6 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         disabled={conf.apikey.length === 0}
                         size="sm"
                         onClick={() => {
-                            console.log("reflesh models");
                             refleshModels();
                         }}
                         className={` ${conf.lang !== "zh-CN" && "text-xs whitespace-normal break-words"}`}

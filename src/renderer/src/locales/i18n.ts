@@ -6,7 +6,6 @@ import * as en from "@shared/lang/en.json";
 import * as ja from "@shared/lang/ja.json";
 import * as ko from "@shared/lang/ko.json";
 
-console.log("zh_CN:", zh_CN);
 export const langs = ["zh-CN", "en", "ja", "ko"];
 export const langMaps = new Map([
     ["zh-CN", "简体中文"],
@@ -29,7 +28,6 @@ const resources = {
     },
 };
 
-console.log("init i18n")
 i18n.use(initReactI18next).init({
     resources,
     lng: "zh-CN",

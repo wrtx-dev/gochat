@@ -50,7 +50,6 @@ export default function SendBox() {
     };
     useEffect(() => {
         const callback = (path: string) => {
-            console.log("path:", path)
             setUploadFiles(prev => {
                 if (prev) {
                     if (prev.filter(f => f.path === path).length > 0) {
@@ -77,7 +76,6 @@ export default function SendBox() {
                 onDrop={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log("file drag")
                     const files = e.dataTransfer.files;
                     if (files && files.length > 0) {
                         for (const f of files) {
@@ -161,7 +159,6 @@ export default function SendBox() {
                             disabled={!checkToolAvialable("search", currentTool, currentModel)}
                             onClick={() => {
                                 const newTools: GeminiToolType[] = currentTool.includes("search") ? [...currentTool.filter(t => t !== "search")] : [...currentTool, "search"];
-                                console.log("newTools:", newTools);
                                 useTool(newTools);
                                 setCurrentTool(newTools);
                             }}
@@ -172,7 +169,6 @@ export default function SendBox() {
                             className={`toolbar-btn ${currentTool.includes("urlContext") ? "bg-neutral-400/30" : "bg-transparent"}`}
                             disabled={!checkToolAvialable("urlContext", currentTool, currentModel)}
                             onClick={() => {
-                                console.log("currentTool:", currentTool);
                                 const newTools: GeminiToolType[] = currentTool.includes("urlContext") ? [...currentTool.filter(t => t !== "urlContext")] : [...currentTool, "urlContext"];
                                 useTool(newTools);
                                 setCurrentTool(newTools);
@@ -316,7 +312,6 @@ const FunctionToolMenu = () => {
 
                                         resolve(true);
                                     } catch (e) {
-                                        console.log("get error:", e);
                                         reject(e);
                                     }
                                 });
@@ -340,7 +335,6 @@ const FunctionToolMenu = () => {
                                     checked={server.enabledDefault}
                                     onCheckedChange={async () => {
                                         if (server.enabledDefault) {
-                                            console.log("stop mcp server:", server);
                                             if (currentTool.includes("function")) {
                                                 await stopMcpServer(server);
                                             }
@@ -350,14 +344,12 @@ const FunctionToolMenu = () => {
                                             if (currentTool.includes("function")) {
 
                                                 const r = await startMcpServer(server);
-                                                console.log("edit server:", server, "set server:", r);
                                                 await editMcpServer({ ...server, enabledDefault: r });
                                             } else {
                                                 await editMcpServer({ ...server, enabledDefault: true });
                                             }
                                         }
                                         const functions = await listMcpTools();
-                                        console.log("functions\n", functions);
                                         if (currentTool.includes("function")) {
                                             if (functions.length > 0) {
                                                 useTool(currentTool, functions);

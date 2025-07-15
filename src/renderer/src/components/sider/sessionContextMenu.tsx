@@ -53,7 +53,6 @@ export default function SessionItemContextMenu({ x, y, onClose, session, context
         >
             <ul className="list-none px-1 py-0">
                 <li className="select-none cursor-pointer rounded-sm hover:bg-neutral-200" onClick={() => {
-                    console.log("rename:", session.sessionName);
                     // document.dispatchEvent(new CustomEvent<session>('rename-session', { detail: session }));
                     onClose();
                     if (contextMenuItemHandler) {
@@ -67,7 +66,6 @@ export default function SessionItemContextMenu({ x, y, onClose, session, context
                     // document.dispatchEvent(new CustomEvent<session>('delete-session', { detail: session }));
                     if (contextMenuItemHandler) {
                         contextMenuItemHandler("del", session);
-                        console.log("show del dialog")
                     }
                 }}>
                     <span className="px-1 text-gray-600">{t("deleteSession")}</span>

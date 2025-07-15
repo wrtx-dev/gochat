@@ -39,7 +39,6 @@ export async function getFilePath(f: any) {
 
 
 export function getMimeType(filePath: string): string {
-    console.log("file path:", filePath);
     const dotIndex = filePath.lastIndexOf(".");
     const extname = dotIndex === -1 ? "" : filePath.substring(dotIndex).toLocaleLowerCase();
 

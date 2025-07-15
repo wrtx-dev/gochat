@@ -135,7 +135,6 @@ export class GeminiClient {
                         await this.saveModelRawMessage(v);
                     }
                     if (v.finishReason && v.finishReason !== FinishReason.STOP) {
-                        console.log("finished reason:", v.finishReason);
                         throw new Error("unnormal finished reason: " + v.finishReason);
                     }
                 }
@@ -183,7 +182,6 @@ export class GeminiClient {
 
 
             if (this.setCurrentSessionID) {
-                console.log("set current sessionID:", sessionID)
                 this.setCurrentSessionID(sessionID);
             }
             if (this.setCurrentSession) {

@@ -32,7 +32,6 @@ export default function QuickApp() {
             deleteMessageCancel(key);
         });
         registerSetCurrentModel((m: string) => {
-            console.log("set current model:", m);
             setCurrentModel(m);
         })
         geminiInit(conf!, true);
@@ -44,7 +43,6 @@ export default function QuickApp() {
     useEffect(() => {
         onConfChanged(() => {
             (async () => {
-                console.log("get conf changed event");
                 const conf = await loadConfig();
                 if (conf) {
                     setConfig(conf);
