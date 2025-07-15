@@ -19,7 +19,7 @@ export default function AboutInfo() {
                     <a href="https://github.com/wrtx-dev/gochat" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                         github repository
                     </a>
-                    <a href="https://app.xwrt.dev" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" >
+                    <a href="https://ai.wrtx.dev" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" >
                         更多信息
                     </a>
                 </CardContent>
