@@ -85,7 +85,6 @@ function App({ config }: { config: Config | null }) {
       if (timestamp > lastUpdateTime) {
         lastUpdateTime = timestamp;
         const sessions = await getAllSessions();
-        console.log("refresh sessions");
         if (sessions.length > 0) {
           setSessions(sessions);
         }

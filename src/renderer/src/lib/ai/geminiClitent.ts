@@ -1,14 +1,13 @@
-import { Content, FinishReason, FunctionCall, FunctionDeclaration, GenerateContentResponse, GoogleGenAI, GroundingMetadata, Part } from "@google/genai";
+import { Content, FinishReason, FunctionCall, FunctionDeclaration, GenerateContentResponse, GoogleGenAI, Part } from "@google/genai";
 import { GeminiToolType, session } from "@shared/types/session";
 import { ChatSession } from "./chatSession";
 import { messageAdder } from "./gemini";
 import { Config } from "../data/config";
 import { FileInfo, Message, MessageCancelFn } from "@shared/types/message";
-import { isYoutubeURI } from "../util/misc";
-import { getMimeType, readFile } from "../util/files";
 import { addNewSessions, addRawMessage, getRawMessageBySessionID, getSession, rawMessage, updateSessionLastUpdate } from "../data/db";
 import { runMcpTool } from "../util/mcpIpc";
 import { SessionTitleService } from "./geminiCreateSessionTitleService";
+import { createMessageText, genFileContent } from "./utils";
 
 
 export class GeminiClient {
@@ -47,109 +46,11 @@ export class GeminiClient {
         });
         this.saved = false;
         this.apiKey = conf.apikey;
-        this.prepare();
         this.tmpSession = tmp;
         this.newSession();
 
     }
 
-    public createMessageText(content?: Content, groundData?: GroundingMetadata) {
-        let text = "";
-        let thinking = false;
-        let fc: undefined | FunctionCall[] = undefined;
-        if (content && content.parts) {
-            const p = content.parts[0];
-            if (p.thought) {
-                thinking = true;
-            }
-            if (p.text) {
-                text += p.text;
-            }
-            if (p.executableCode) {
-                text += "\ncode exec:\n```" + p.executableCode.language + "\n" + p.executableCode.code + "\n```";
-            }
-            if (p.codeExecutionResult) {
-                text += "\n code run result:\n" + p.codeExecutionResult.output || "" + "\n"
-            }
-            if (p.inlineData) {
-                const dataURL = "data:" + p.inlineData.mimeType + ";base64," + p.inlineData.data;
-                text += `\n<img src="http://dev.xwrt.aichatter/${dataURL}" alt="gen image">\n`;
-            }
-            for (const fp of content.parts) {
-                if (fp.functionCall) {
-                    if (!fc) {
-                        fc = [];
-                    }
-                    fc = [...fc, fp.functionCall];
-                }
-            }
-        }
-        if (groundData) {
-            if (groundData.searchEntryPoint?.renderedContent) {
-                text += "\n" + groundData.searchEntryPoint.renderedContent + "\n";
-            }
-        }
-        return thinking ? { thinking: text.length > 0 ? text : undefined, msgText: undefined, fcall: fc } : {
-            thinking: undefined,
-            msgText: text.length > 0 ? text : undefined,
-            fcall: fc,
-        };
-    }
-
-    private async genFileContent(msg: string, files?: FileInfo[]) {
-        let fileInfos: undefined | FileInfo[] = undefined;
-        let contents: undefined | Part[] = undefined;
-        if (files) {
-            for (const f of files) {
-                if (!fileInfos) {
-                    fileInfos = [];
-                }
-                if (!contents) {
-                    contents = [];
-                }
-                if (isYoutubeURI(f.path)) {
-                    fileInfos = [...fileInfos, {
-                        fileType: "",
-                        path: f.path,
-                        youtube: f.youtube,
-                        ytFps: f.ytFps,
-                        ytStart: f.ytStart,
-                        ytStop: f.ytStop,
-                    }];
-                    const p: Part = {
-                        fileData: {
-                            fileUri: f.path,
-                        },
-                        videoMetadata: {
-                            startOffset: f.ytStart ? `${f.ytStart}s` : undefined,
-                            endOffset: f.ytStop ? `${f.ytStop}s` : undefined,
-                            fps: f.ytFps,
-                        }
-                    }
-                    contents = [...contents, p];
-                    continue;
-                }
-                fileInfos = [...fileInfos, {
-                    fileType: getMimeType(f.path),
-                    path: f.path
-                }];
-                const data = await readFile(f.path);
-
-
-                contents = [...contents, {
-                    inlineData: {
-                        mimeType: getMimeType(f.path),
-                        data: data
-                    }
-                }]
-            }
-            // const size = await getAllFilesSize(files);
-        }
-        if (contents) {
-            contents = [{ text: msg }, ...contents]
-        }
-        return { fileInfos, contents }
-    }
 
     private addUserMsg(msg: string, fileInfos?: FileInfo[], sessionID?: string) {
         if (this.msgCtrl) {
@@ -196,7 +97,7 @@ export class GeminiClient {
                     }
                     // rawModelMessages = [...rawModelMessages, modelMessage];
 
-                    const { thinking, msgText, fcall } = this.createMessageText(v.content, v.groundingMetadata);
+                    const { thinking, msgText, fcall } = createMessageText(v.content, v.groundingMetadata);
                     if (msgText || thinking || fcall) {
                         let msg: Message = {
                             role: "assistant",
@@ -315,21 +216,12 @@ export class GeminiClient {
             abort = new AbortController();
         }
         const { sessionID, userSession } = await this.getOrCreateSession(abort);
-        const { fileInfos, contents } = await this.genFileContent(msg, files);
+        const { fileInfos, contents } = await genFileContent(msg, files);
         const response = chatSession.sendMessageStream(contents ? contents : msg, abort);
-        let rounded = !this.rounded ? 0 : this.rounded;
-        // if (!this.rounded) {
-        //     this.rounded = 0
-        // }
-        rounded += 1;
+        let rounded = !this.rounded ? 1 : this.rounded + 1;
 
         this.addUserMsg(msg, fileInfos, sessionID);
         let firstResponse = true;
-        // if (!this.saved) {
-        //     this.sessionUUID = crypto.randomUUID();
-        // }
-        // this.addUserMsg(msg, fileInfos, sessionID);
-        // let firstResponse = true;
 
         const userRawMsg: rawMessage = {
             content: contents ? { role: "user", parts: contents } : { role: "user", parts: [{ text: msg }] },
@@ -337,8 +229,7 @@ export class GeminiClient {
             files: fileInfos ? fileInfos : undefined,
             role: "user",
         }
-        // await addRawMessage(userRawMsg);
-        // let rawModelMessages: rawMessage[] = [userRawMsg];
+
         if (!this.tmpSession) {
             await addRawMessage(userRawMsg);
         }
@@ -521,6 +412,7 @@ export class GeminiClient {
         if (!this.model) {
             this.model = this.conf!.defaultModel;
         }
+        this.prepare();
         this.sessionUUID = crypto.randomUUID();
         if (this.conf!.newSessionModelUseDefault) {
             this.model = this.conf!.defaultModel;
@@ -547,71 +439,83 @@ export class GeminiClient {
 
     }
 
+    private async resetMessages() {
+        if (this.clearMessags) {
+            this.clearMessags();
+        }
+    }
+
+    private async changeCurrenSession(s: session) {
+        if (this.setCurrentSessionID) {
+            this.setCurrentSessionID(s.uuid);
+        }
+        if (this.setCurrentSession) {
+            this.setCurrentSession(s);
+        }
+        if (this.setCurrentModel) {
+            this.setCurrentModel(this.session!.getModel());
+        }
+    }
+
+    private loadFinished() {
+        if (this.finshedLoadSession) {
+            this.finshedLoadSession();
+        }
+    }
+
+
+    private async setHistoryMessage(s: session) {
+        this.rounded = 0;
+        let isNew = false;
+        let role: undefined | string = undefined;
+        let idx = 0;
+        const rawMessages = await getRawMessageBySessionID(s.uuid);
+        for (const rawMsg of rawMessages) {
+            if (rawMsg.role && rawMsg.role != role) {
+                this.rounded = this.rounded + 1;
+                isNew = true;
+                role = rawMsg.role;
+            }
+            const { thinking, msgText, fcall } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
+            if (thinking || msgText || fcall || rawMsg.hasError) {
+                let msg: Message = {
+                    role: rawMsg.role === "user" ? "user" : "assistant",
+                    id: "",
+                    message: msgText ? msgText : "",
+                    thinking: thinking,
+                    isError: rawMsg.role !== "user" && rawMsg.hasError ? rawMsg.hasError : false,
+                    errInfo: rawMsg.role !== "user" && rawMsg.hasError && rawMsg.errInfo ? rawMsg.errInfo : "",
+                    files: rawMsg.files ? rawMsg.files : [],
+                    hasFuncCall: fcall ? fcall.length > 0 : false,
+                    funcCalls: fcall ? fcall : [],
+                    finished: true,
+                    sessionID: s.uuid,
+                };
+                if (this.msgCtrl) {
+                    this.msgCtrl(msg, isNew);
+                }
+                if (isNew) {
+                    isNew = !isNew;
+                }
+            }
+            idx++;
+        }
+        if (this.rounded > 1) {
+            this.rounded /= 2;
+        }
+    }
+
     public async loadSession(id: string) {
         const session = await getSession(id);
         if (session) {
-            if (this.clearMessags) {
-                await (async () => {
-                    this.clearMessags!();
-                })();
-            }
-
+            this.prepare();
+            await this.resetMessages();
             this.saved = true;
-
             this.session = await ChatSession.createSession(this.client, this.conf!, session, this.model);
-            const rawMessages = await getRawMessageBySessionID(id)
-            await (async () => {
-                if (this.setCurrentSessionID) {
-                    this.setCurrentSessionID(session.uuid);
-                }
-                if (this.setCurrentSession) {
-                    this.setCurrentSession(session);
-                }
-            })();
 
-            if (this.setCurrentModel) {
-                this.setCurrentModel(this.session!.getModel());
-            }
-            this.rounded = 0;
-            let isNew = false;
-            let role: undefined | string = undefined;
-            let idx = 0;
-            for (const rawMsg of rawMessages) {
-                if (rawMsg.role && rawMsg.role != role) {
-                    this.rounded = this.rounded + 1;
-                    isNew = true;
-                    role = rawMsg.role;
-                }
-                const { thinking, msgText, fcall } = this.createMessageText(rawMsg.content, rawMsg.groundMetadata);
-                if (thinking || msgText || fcall || rawMsg.hasError) {
-                    let msg: Message = {
-                        role: rawMsg.role === "user" ? "user" : "assistant",
-                        id: "",
-                        message: msgText ? msgText : "",
-                        thinking: thinking,
-                        isError: rawMsg.role !== "user" && rawMsg.hasError ? rawMsg.hasError : false,
-                        errInfo: rawMsg.role !== "user" && rawMsg.hasError && rawMsg.errInfo ? rawMsg.errInfo : "",
-                        files: rawMsg.files ? rawMsg.files : [],
-                        hasFuncCall: fcall ? fcall.length > 0 : false,
-                        funcCalls: fcall ? fcall : [],
-                        finished: true,
-                        sessionID: session.uuid,
-                    };
-                    if (this.msgCtrl) {
-                        this.msgCtrl(msg, isNew);
-                    }
-                    if (isNew) {
-                        isNew = !isNew;
-                    }
-                }
-                idx++;
-            }
-            if (this.rounded > 1) {
-                this.rounded /= 2;
-            }
-            if (this.finshedLoadSession) {
-                this.finshedLoadSession();
-            }
+            await this.changeCurrenSession(session);
+            await this.setHistoryMessage(session);
+            this.loadFinished();
         }
     }
 
