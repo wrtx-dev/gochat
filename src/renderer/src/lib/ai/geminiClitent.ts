@@ -4,7 +4,7 @@ import { ChatSession } from "./chatSession";
 import { messageAdder } from "./gemini";
 import { Config } from "../data/config";
 import { FileInfo, Message, MessageCancelFn } from "@shared/types/message";
-import { addNewSessions, addRawMessage, getRawMessageBySessionID, getSession, rawMessage, updateSessionLastUpdate } from "../data/db";
+import { addNewSessions, addRawMessage, getSession, rawMessage, updateSessionLastUpdate } from "../data/db";
 import { SessionTitleService } from "./geminiCreateSessionTitleService";
 import { createMessageListFromRawMessage, createMessageText, genFileContent } from "./utils";
 import { runMcpTools } from "./mcpService";
@@ -436,8 +436,8 @@ export class GeminiClient {
         const { messages, messageTurn } = await createMessageListFromRawMessage(s.uuid);
         if (this.loadMessageList) {
             this.loadMessageList(messages, s.uuid);
+            this.messageTurn = messageTurn;
         }
-        this.messageTurn = messageTurn;
     }
 
     public async loadSession(id: string) {
@@ -447,9 +447,6 @@ export class GeminiClient {
             await this.resetMessages();
             this.session = await ChatSession.createSession(this.client, this.conf!, session, this.model);
             await this.changeCurrenSession(session);
-            const r = await createMessageListFromRawMessage(id);
-            console.log("message turn:", r.messageTurn);
-            console.log("message list:", r.messages);
             await this.setHistoryMessage(session);
             this.loadFinished();
         }

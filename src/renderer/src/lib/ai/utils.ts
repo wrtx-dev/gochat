@@ -126,7 +126,7 @@ export async function createMessageListFromRawMessage(id: string) {
             if (!tmpMessage) {
                 tmpMessage = {
                     role: rawMsg.role === "user" ? "user" : "assistant",
-                    id: "",
+                    id: crypto.randomUUID(),
                     message: msgText ? msgText : "",
                     thinking: thinking,
                     isError: rawMsg.role !== "user" && rawMsg.hasError ? rawMsg.hasError : false,
