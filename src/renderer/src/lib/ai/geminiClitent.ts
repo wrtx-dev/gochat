@@ -1,4 +1,4 @@
-import { Content, FinishReason, FunctionCall, FunctionDeclaration, GenerateContentResponse, GoogleGenAI, Part } from "@google/genai";
+import { Candidate, Content, FinishReason, FunctionCall, FunctionDeclaration, GenerateContentResponse, GoogleGenAI, Part } from "@google/genai";
 import { GeminiToolType, session } from "@shared/types/session";
 import { ChatSession } from "./chatSession";
 import { messageAdder } from "./gemini";
@@ -12,31 +12,32 @@ import { createMessageText, genFileContent } from "./utils";
 
 export class GeminiClient {
     private client: GoogleGenAI;
+    private sessionState?: {
+        sessionID: string,
+        saved: boolean,
+        session?: session,
+    }
     private session?: ChatSession;
-    private sessionUUID?: string;
     private model?: string;
     private msgCtrl?: messageAdder;
-    private fleshSession?: () => void;
+    private refreshSession?: () => void;
     private setCurrentSessionID?: (id: string) => void;
     private setCurrentSession?: (s: session | null) => void;
     private setCurrentModel?: (m: string) => void;
-    private saved: boolean;
     private apiKey?: string;
-    private clearMessags?: () => void;
+    private clearMessages?: () => void;
     private conf?: Config;
-    private rounded?: number;
-    private userSession?: session;
+    private messageTurn?: number;
     private cancelMessage?: (key: string, cancel: MessageCancelFn) => void;
     private deleteCancelMessage?: (key: string) => void;
-    private finshedLoadSession?: () => void;
+    private finishedLoadSession?: () => void;
     private tmpSession: boolean;
 
     private prepare() {
-        this.saved = false;
         this.session = undefined;
-        this.sessionUUID = undefined;
-        this.rounded = undefined;
-        this.userSession = undefined;
+        this.sessionState = undefined;
+        this.messageTurn = undefined;
+
 
     }
     constructor(conf: Config, tmp: boolean) {
@@ -44,7 +45,6 @@ export class GeminiClient {
         this.client = new GoogleGenAI({
             apiKey: conf.apikey
         });
-        this.saved = false;
         this.apiKey = conf.apikey;
         this.tmpSession = tmp;
         this.newSession();
@@ -69,11 +69,41 @@ export class GeminiClient {
         }
     }
 
-    private async processResponse(firstResponse: boolean, response: Promise<AsyncGenerator<GenerateContentResponse, any, any> | undefined>, sessionID: string) {
+    private createAssistantMsg(firstResponse: boolean, msgText: string, thinking?: string, fcall?: FunctionCall[], sessionID?: string) {
+        let msg: Message = {
+            role: "assistant",
+            id: "",
+            message: msgText || "",
+            thinking: thinking,
+            isError: false,
+            errInfo: "",
+            files: [],
+            hasFuncCall: fcall ? fcall.length > 0 : false,
+            funcCalls: fcall ? [...fcall] : [],
+            finished: false,
+            sessionID: sessionID
+        };
+        if (this.msgCtrl) {
+            this.msgCtrl(msg, firstResponse);
+        }
+    }
+
+    private async saveModelRawMessage(v: Candidate) {
+        const modelMessage: rawMessage = {
+            content: v.content,
+            groundMetadata: v.groundingMetadata,
+            sessionID: this.sessionState!.sessionID,
+            role: "model"
+        }
+        if (!this.tmpSession) {
+            await addRawMessage(modelMessage);
+        }
+    }
+
+    private async handleResponseProcessing(firstResponse: boolean, response: Promise<AsyncGenerator<GenerateContentResponse, any, any> | undefined>, sessionID: string) {
         if (!response) {
             throw new Error("no response");
         }
-        // let rawModelMessages: rawMessage[] = [];
         let hasError = false;
         let funcs: FunctionCall[] = [];
         let errInfo: string | undefined = undefined;
@@ -89,32 +119,10 @@ export class GeminiClient {
                 }
                 for (const v of chunk.candidates) {
                     hasContent = true;
-                    const modelMessage: rawMessage = {
-                        content: v.content,
-                        groundMetadata: v.groundingMetadata,
-                        sessionID: this.sessionUUID!,
-                        role: "model"
-                    }
-                    // rawModelMessages = [...rawModelMessages, modelMessage];
 
                     const { thinking, msgText, fcall } = createMessageText(v.content, v.groundingMetadata);
                     if (msgText || thinking || fcall) {
-                        let msg: Message = {
-                            role: "assistant",
-                            id: "",
-                            message: msgText || "",
-                            thinking: thinking,
-                            isError: false,
-                            errInfo: "",
-                            files: [],
-                            hasFuncCall: fcall ? fcall.length > 0 : false,
-                            funcCalls: fcall ? [...fcall] : [],
-                            finished: false,
-                            sessionID: sessionID
-                        };
-                        if (this.msgCtrl) {
-                            this.msgCtrl(msg, firstResponse);
-                        }
+                        this.createAssistantMsg(firstResponse, msgText ? msgText : "", thinking, fcall, sessionID);
                         if (firstResponse) {
                             firstResponse = !firstResponse;
                         }
@@ -123,7 +131,7 @@ export class GeminiClient {
                         funcs = [...funcs, ...fcall]
                     }
                     if (!this.tmpSession) {
-                        await addRawMessage(modelMessage);
+                        await this.saveModelRawMessage(v);
                     }
                     if (v.finishReason && v.finishReason !== FinishReason.STOP) {
                         console.log("finished reason:", v.finishReason);
@@ -155,10 +163,10 @@ export class GeminiClient {
     }
 
     private async getOrCreateSession(abort?: AbortController) {
-        let sessionID: string = this.sessionUUID!;
+        let sessionID: string = this.sessionState ? this.sessionState.sessionID : crypto.randomUUID();
         let userSession: session | null = null;
-        if (this.saved) {
-            userSession = this.userSession!;
+        if (this.sessionState!.saved) {
+            userSession = this.sessionState!.session!;
         } else {
             userSession = {
                 model: this.model!,
@@ -170,7 +178,7 @@ export class GeminiClient {
                 uuid: sessionID,
                 instruction: this.session!.getSystemInstruction(),
             };
-            this.userSession = userSession;
+            this.sessionState!.session = userSession;
 
 
             if (this.setCurrentSessionID) {
@@ -181,12 +189,12 @@ export class GeminiClient {
                 this.setCurrentSession(userSession);
             }
 
-            this.saved = true;
-            this.sessionUUID = sessionID;
+            this.sessionState!.saved = true;
+            // this.sessionUUID = sessionID;
             if (!this.tmpSession) {
                 await addNewSessions(userSession!);
-                if (this.fleshSession) {
-                    this.fleshSession();
+                if (this.refreshSession) {
+                    this.refreshSession();
                 }
             }
         }
@@ -197,12 +205,25 @@ export class GeminiClient {
                 });
             })();
         }
-        await (async () => {
-            if (!this.saved && this.setCurrentSessionID) {
-                this.setCurrentSessionID(sessionID);
-            }
-        })();
+        // await (async () => {
+        //     if (!this.sessionState!.saved && this.setCurrentSessionID) {
+        //         this.setCurrentSessionID(sessionID);
+        //     }
+        // })();
         return { sessionID, userSession };
+    }
+
+    private async saveUserRawMessage(contents: Part[] | undefined, msg: string, sessionId: string, fileInfos?: FileInfo[]) {
+        const userRawMsg: rawMessage = {
+            content: contents ? { role: "user", parts: contents } : { role: "user", parts: [{ text: msg }] },
+            sessionID: sessionId,
+            files: fileInfos ? fileInfos : undefined,
+            role: "user",
+        }
+
+        if (!this.tmpSession) {
+            await addRawMessage(userRawMsg);
+        }
     }
 
     public async sendMessageStream(msg: string, files?: FileInfo[]) {
@@ -217,119 +238,69 @@ export class GeminiClient {
         }
         const { sessionID, userSession } = await this.getOrCreateSession(abort);
         const { fileInfos, contents } = await genFileContent(msg, files);
-        const response = chatSession.sendMessageStream(contents ? contents : msg, abort);
-        let rounded = !this.rounded ? 1 : this.rounded + 1;
+        let response = chatSession.sendMessageStream(contents ? contents : msg, abort);
+        let messageTurn = !this.messageTurn ? 1 : this.messageTurn + 1;
 
         this.addUserMsg(msg, fileInfos, sessionID);
         let firstResponse = true;
 
-        const userRawMsg: rawMessage = {
-            content: contents ? { role: "user", parts: contents } : { role: "user", parts: [{ text: msg }] },
-            sessionID: sessionID,
-            files: fileInfos ? fileInfos : undefined,
-            role: "user",
-        }
-
-        if (!this.tmpSession) {
-            await addRawMessage(userRawMsg);
-        }
+        await this.saveUserRawMessage(contents, msg, sessionID, fileInfos);
         let hasError = false;
         let funcs: FunctionCall[] = [];
 
         let eInfo: undefined | string = undefined;
-        const { error, functions, first, errInfo } = await this.processResponse(firstResponse, response, sessionID);
-        eInfo = errInfo;
-        firstResponse = first;
-        hasError = error;
-        this.setLastMsg(firstResponse, hasError, eInfo, sessionID);
-        funcs = [...functions];
-        if (!hasError && funcs.length > 0) {
-            const res: any[] = [];
-            let parts: Part[] = [];
-            for (const fun of funcs) {
-                const r = await runMcpTool(fun);
-                res.push(r);
-                parts.push({
-                    functionResponse: {
-                        id: fun.id,
-                        name: fun.name,
-                        response: r,
-                    }
-                });
-                console.log("run mcp tool:", fun.name, "response:", r, "parts:", parts);
-            }
-            const funcMsg: rawMessage = {
-                content: { parts: parts, role: "user" },
-                sessionID: sessionID,
-                files: undefined,
-                role: "user",
-            }
-            // rawModelMessages = [...rawModelMessages, funcMsg];
-            if (!this.tmpSession) {
-                await addRawMessage(funcMsg);
-            }
-            const { error, errInfo } = await this.processFuncsUserMsg(chatSession, parts, sessionID, conf, abort);
+        let again = false;
+        do {
+            again = false;
+            const { error, functions, first, errInfo } = await this.handleResponseProcessing(firstResponse, response, sessionID);
             eInfo = errInfo;
-            if (error) {
-                funcMsg.hasError = error;
+            firstResponse = first;
+            hasError = error;
+            this.setLastMsg(firstResponse, hasError, eInfo, sessionID);
+            funcs = [...functions];
+            if (!hasError && funcs.length > 0) {
+                again = true;
+                const res: any[] = [];
+                let parts: Part[] = [];
+                for (const fun of funcs) {
+                    const r = await runMcpTool(fun);
+                    res.push(r);
+                    parts.push({
+                        functionResponse: {
+                            id: fun.id,
+                            name: fun.name,
+                            response: r,
+                        }
+                    });
+                }
+                const funcMsg: rawMessage = {
+                    content: { parts: parts, role: "user" },
+                    sessionID: sessionID,
+                    files: undefined,
+                    role: "user",
+                }
+                if (!this.tmpSession) {
+                    await addRawMessage(funcMsg);
+                }
+                response = this.session.sendMessageStream(parts, abort);
+                firstResponse = true;
             }
-        }
+
+        } while (again);
+
 
         if (this.deleteCancelMessage) {
             this.deleteCancelMessage(sessionID);
         }
 
-        if (this.sessionUUID === sessionID) {
-            this.rounded = rounded;
+        if (this.sessionState?.sessionID === sessionID) {
+            this.messageTurn = messageTurn;
         }
         if (!this.tmpSession) {
-            await this.updateSessionAfterMessage(sessionID, conf, rounded, userSession, hasError, userSession.named ? undefined : chatSession.getHistory());
+            await this.updateSessionAfterMessage(sessionID, conf, messageTurn, userSession, hasError, userSession.named ? undefined : chatSession.getHistory());
         }
     }
 
-    private async processFuncsUserMsg(chat: ChatSession, parts: Part[], sessionID: string, conf: Config, abort?: AbortController) {
-        const response = chat.sendMessageStream(parts, abort);
-        let firstResponse = true;
-        let hasError = false;
-        let funcs: FunctionCall[] = [];
-        let eInfo: undefined | string = undefined;
-        const { error, functions, first, errInfo } = await this.processResponse(firstResponse, response, sessionID);
-        eInfo = errInfo;
-        hasError = error;
-        firstResponse = first;
-        funcs = [...funcs, ...functions];
-        this.setLastMsg(firstResponse, hasError, eInfo, sessionID);
-        if (funcs.length > 0 && !hasError) {
-            const res: any[] = [];
-            let fparts: Part[] = [];
-            for (const fun of funcs) {
-                const r = await runMcpTool(fun);
-                res.push(r);
-                fparts.push({
-                    functionResponse: {
-                        id: fun.id,
-                        name: fun.name,
-                        response: r,
-                    }
-                });
-            }
-            const funcMsg: rawMessage = {
-                content: { parts: fparts, role: "user" },
-                sessionID: sessionID,
-                files: undefined,
-                role: "user",
-            }
-            if (!this.tmpSession) {
-                await addRawMessage(funcMsg);
-            }
-            const { error, errInfo } = await this.processFuncsUserMsg(chat, fparts, sessionID, conf, abort);
-            eInfo = errInfo;
-            hasError = error;
-        }
-
-        return { error: hasError, eInfo }
-
-    }
 
     private setErrMsg(firstResponse, e: Error, sessionID?: string) {
         const msg: Message = {
@@ -377,8 +348,8 @@ export class GeminiClient {
     private async updateSession(sessionID: string) {
 
         await updateSessionLastUpdate(sessionID);
-        if (this.fleshSession) {
-            this.fleshSession();
+        if (this.refreshSession) {
+            this.refreshSession();
         }
 
     }
@@ -391,11 +362,11 @@ export class GeminiClient {
     }
 
     public async updateSessionTitle(id: string, title: string | undefined) {
-        if (this.userSession && title && this.userSession.uuid === id) {
-            this.userSession.sessionName = title;
+        if (this.sessionState && this.sessionState.session && title && this.sessionState.session.uuid === id) {
+            this.sessionState.session.sessionName = title;
         }
-        if (this.fleshSession) {
-            this.fleshSession();
+        if (this.refreshSession) {
+            this.refreshSession();
         }
     }
 
@@ -413,23 +384,25 @@ export class GeminiClient {
             this.model = this.conf!.defaultModel;
         }
         this.prepare();
-        this.sessionUUID = crypto.randomUUID();
+        this.sessionState = {
+            sessionID: crypto.randomUUID(),
+            saved: false,
+        }
         if (this.conf!.newSessionModelUseDefault) {
             this.model = this.conf!.defaultModel;
             if (this.setCurrentModel) {
                 this.setCurrentModel(this.model!);
             }
         }
-        this.saved = false;
         if (this.setCurrentSessionID) {
-            this.setCurrentSessionID(this.sessionUUID!);
+            this.setCurrentSessionID(this.sessionState.sessionID);
         }
         if (this.setCurrentSession) {
             this.setCurrentSession(null);
         }
-        this.session = await ChatSession.createSession(this.client, this.conf!, this.sessionUUID!, this.model)
-        if (this.clearMessags) {
-            this.clearMessags();
+        this.session = await ChatSession.createSession(this.client, this.conf!, this.sessionState.sessionID, this.model)
+        if (this.clearMessages) {
+            this.clearMessages();
         }
     }
 
@@ -440,12 +413,17 @@ export class GeminiClient {
     }
 
     private async resetMessages() {
-        if (this.clearMessags) {
-            this.clearMessags();
+        if (this.clearMessages) {
+            this.clearMessages();
         }
     }
 
     private async changeCurrenSession(s: session) {
+        this.sessionState = {
+            sessionID: s.uuid,
+            session: s,
+            saved: true,
+        };
         if (this.setCurrentSessionID) {
             this.setCurrentSessionID(s.uuid);
         }
@@ -458,21 +436,21 @@ export class GeminiClient {
     }
 
     private loadFinished() {
-        if (this.finshedLoadSession) {
-            this.finshedLoadSession();
+        if (this.finishedLoadSession) {
+            this.finishedLoadSession();
         }
     }
 
 
     private async setHistoryMessage(s: session) {
-        this.rounded = 0;
+        this.messageTurn = 0;
         let isNew = false;
         let role: undefined | string = undefined;
         let idx = 0;
         const rawMessages = await getRawMessageBySessionID(s.uuid);
         for (const rawMsg of rawMessages) {
             if (rawMsg.role && rawMsg.role != role) {
-                this.rounded = this.rounded + 1;
+                this.messageTurn = this.messageTurn + 1;
                 isNew = true;
                 role = rawMsg.role;
             }
@@ -500,8 +478,8 @@ export class GeminiClient {
             }
             idx++;
         }
-        if (this.rounded > 1) {
-            this.rounded /= 2;
+        if (this.messageTurn > 1) {
+            this.messageTurn /= 2;
         }
     }
 
@@ -510,9 +488,7 @@ export class GeminiClient {
         if (session) {
             this.prepare();
             await this.resetMessages();
-            this.saved = true;
             this.session = await ChatSession.createSession(this.client, this.conf!, session, this.model);
-
             await this.changeCurrenSession(session);
             await this.setHistoryMessage(session);
             this.loadFinished();
@@ -528,7 +504,7 @@ export class GeminiClient {
     }
 
     public registerRefleshSessions(fn: () => void) {
-        this.fleshSession = fn;
+        this.refreshSession = fn;
     }
 
     public registerSetCurrentSessionID(fn: (id: string) => void) {
@@ -540,7 +516,7 @@ export class GeminiClient {
     }
 
     public registerClearMessages(fn: () => void) {
-        this.clearMessags = fn;
+        this.clearMessages = fn;
     }
 
     public registerSetCurrentModel(fn: (m: string) => void) {
@@ -555,6 +531,6 @@ export class GeminiClient {
     }
 
     public registerFinishedLoadSession(fn: () => void) {
-        this.finshedLoadSession = fn;
+        this.finishedLoadSession = fn;
     }
 }

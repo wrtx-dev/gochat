@@ -69,16 +69,6 @@ export default function MessageList() {
     }
     useEffect(() => {
         registerFinishedLoadSession(() => {
-            // (async () => {
-            //     setTimeout(() => {
-            //         console.log("scroll to end", containerRef.current);
-            //         containerRef.current?.scrollTo({
-            //             top: containerRef.current?.scrollHeight,
-            //             behavior: "instant"
-            //         })
-            //     }, 800)
-            // })();
-            console.log("trigger load finished")
             setLoaded(true);
         });
         return () => {
@@ -87,7 +77,6 @@ export default function MessageList() {
     }, []);
     useLayoutEffect(() => {
         if (loaded) {
-            console.log("scroll to end", containerRef.current);
             requestAnimationFrame(() => {
                 containerRef.current?.scrollTo({
                     top: containerRef.current?.scrollHeight,
