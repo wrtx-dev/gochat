@@ -5,9 +5,9 @@ import { messageAdder } from "./gemini";
 import { Config } from "../data/config";
 import { FileInfo, Message, MessageCancelFn } from "@shared/types/message";
 import { addNewSessions, addRawMessage, getRawMessageBySessionID, getSession, rawMessage, updateSessionLastUpdate } from "../data/db";
-import { runMcpTool } from "../util/mcpIpc";
 import { SessionTitleService } from "./geminiCreateSessionTitleService";
 import { createMessageText, genFileContent } from "./utils";
+import { runMcpTools } from "./mcpService";
 
 
 export class GeminiClient {
@@ -260,19 +260,8 @@ export class GeminiClient {
             funcs = [...functions];
             if (!hasError && funcs.length > 0) {
                 again = true;
-                const res: any[] = [];
-                let parts: Part[] = [];
-                for (const fun of funcs) {
-                    const r = await runMcpTool(fun);
-                    res.push(r);
-                    parts.push({
-                        functionResponse: {
-                            id: fun.id,
-                            name: fun.name,
-                            response: r,
-                        }
-                    });
-                }
+                const parts = await runMcpTools(funcs);
+
                 const funcMsg: rawMessage = {
                     content: { parts: parts, role: "user" },
                     sessionID: sessionID,
