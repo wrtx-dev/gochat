@@ -1,6 +1,6 @@
 # Gemini AI Client
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 A desktop client for Gemini AI built with Electron + React + TypeScript
 
@@ -85,4 +85,4 @@ pnpm build:mac    # macOS version
 
 ## License
 
-MIT © wrtx.dev
+Apache 2.0 © wrtx.dev
