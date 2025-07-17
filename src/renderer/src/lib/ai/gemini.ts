@@ -18,7 +18,7 @@ interface callbackRegister {
 
 let callbacks: callbackRegister = {};
 
-export type messageAdder = (msg: Message, flag: boolean) => void;
+export type messageAdder = (msg: Message, flag: boolean, supports?: Map<string, string>) => void;
 
 
 let chatter: GeminiClient | null = null

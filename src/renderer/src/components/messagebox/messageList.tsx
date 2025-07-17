@@ -22,7 +22,7 @@ export default function MessageList() {
     const setStoreSessionID = uiState(state => state.setStoreSessionID);
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
-        registerAddMessage((msg: Message, flag: boolean) => {
+        registerAddMessage((msg: Message, flag: boolean, supports?: Map<string, string>) => {
             if (msg.sessionID !== currentSessionID) {
                 return;
             }
@@ -30,13 +30,24 @@ export default function MessageList() {
                 if (msg.id === "") {
                     msg.id = crypto.randomUUID();
                 }
-                setMessages(prev => [...prev, msg]);
+                let msgText = msg.message;
+                if (supports && supports.size > 0) {
+                    supports.forEach((v, k) => {
+                        msgText = msgText.replace(k, v);
+                    });
+                }
+                setMessages(prev => [...prev, { ...msg, message: msgText }]);
             } else {
                 setMessages((prev) => {
                     let lastMsg = prev[prev.length - 1];
                     let newMsg: Message = { ...lastMsg, finished: msg.finished };
                     if (msg.message.length > 0) {
                         newMsg.message += msg.message;
+                        if (supports && supports.size > 0) {
+                            supports.forEach((v, k) => {
+                                newMsg.message = newMsg.message.replace(k, v);
+                            });
+                        }
                     }
                     if (msg.thinking && msg.thinking.length > 0) {
                         if (newMsg.thinking) {

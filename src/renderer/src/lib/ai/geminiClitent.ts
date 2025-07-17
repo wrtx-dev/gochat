@@ -70,7 +70,7 @@ export class GeminiClient {
         }
     }
 
-    private createAssistantMsg(firstResponse: boolean, msgText: string, thinking?: string, fcall?: FunctionCall[], sessionID?: string) {
+    private createAssistantMsg(firstResponse: boolean, msgText: string, thinking?: string, fcall?: FunctionCall[], sessionID?: string, supports?: Map<string, string>) {
         let msg: Message = {
             role: "assistant",
             id: "",
@@ -85,7 +85,7 @@ export class GeminiClient {
             sessionID: sessionID
         };
         if (this.msgCtrl) {
-            this.msgCtrl(msg, firstResponse);
+            this.msgCtrl(msg, firstResponse, supports);
         }
     }
 
@@ -121,9 +121,9 @@ export class GeminiClient {
                 for (const v of chunk.candidates) {
                     hasContent = true;
 
-                    const { thinking, msgText, fcall } = createMessageText(v.content, v.groundingMetadata);
+                    const { thinking, msgText, fcall, supports } = createMessageText(v.content, v.groundingMetadata);
                     if (msgText || thinking || fcall) {
-                        this.createAssistantMsg(firstResponse, msgText ? msgText : "", thinking, fcall, sessionID);
+                        this.createAssistantMsg(firstResponse, msgText ? msgText : "", thinking, fcall, sessionID, supports);
                         if (firstResponse) {
                             firstResponse = !firstResponse;
                         }

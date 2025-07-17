@@ -4,8 +4,8 @@ import { globalConfig } from "@renderer/lib/state/confState";
 import { forwardRef, Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { getModels, getModelsList, saveModelsList } from "@renderer/lib/util/model";
-import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "../ui/select";
+import { getModels, getModelsList, saveModelsList, setModelsTagMap } from "@renderer/lib/util/model";
+import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem, SelectGroup, SelectLabel } from "../ui/select";
 import { Button } from "../ui/button";
 import { modelSimpleInfo } from "@renderer/lib/util/model";
 import { Checkbox } from "../ui/checkbox";
@@ -125,7 +125,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         ...prev,
                         apikey: e.target.value
                     }))}
-                    onBlur={() => {
+                    onBlur={models && models.length > 0 ? undefined : () => {
                         if (!models || models.length === 0) {
                             refleshModels();
                         }
@@ -161,9 +161,18 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                             <SelectValue placeholder={t("selectModel")} />
                         </SelectTrigger>
                         <SelectContent>
-                            {models && models.map((v) => {
+                            {models && [...Array.from(setModelsTagMap(models).keys())].sort().reverse().map((tag) => {
                                 return (
-                                    <SelectItem className="cursor-default" value={v.name} key={v.name}>{v.displayName}</SelectItem>
+                                    <SelectGroup key={`${tag}-group`} className="cursor-default">
+                                        <SelectLabel className="cursor-default">{tag}</SelectLabel>
+                                        {setModelsTagMap(models).get(tag)?.map((v) => {
+                                            return (
+                                                <SelectItem className="cursor-default" value={v.name} key={v.name}>
+                                                    {v.displayName}
+                                                </SelectItem>
+                                            )
+                                        })}
+                                    </SelectGroup>
                                 )
                             })}
                         </SelectContent>
@@ -243,11 +252,22 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         <SelectValue placeholder={t("selectModel")} />
                     </SelectTrigger>
                     <SelectContent>
-                        {models && models.map((v) => {
-                            return (
-                                <SelectItem className="cursor-default" value={v.name} key={v.name}>{v.displayName}</SelectItem>
-                            )
-                        })}
+                        <SelectContent>
+                            {models && [...Array.from(setModelsTagMap(models).keys())].sort().reverse().map((tag) => {
+                                return (
+                                    <SelectGroup key={`${tag}-group`} className="cursor-default">
+                                        <SelectLabel className="cursor-default">{tag}</SelectLabel>
+                                        {setModelsTagMap(models).get(tag)?.map((v) => {
+                                            return (
+                                                <SelectItem className="cursor-default" value={v.name} key={v.name}>
+                                                    {v.displayName}
+                                                </SelectItem>
+                                            )
+                                        })}
+                                    </SelectGroup>
+                                )
+                            })}
+                        </SelectContent>
                     </SelectContent>
                 </Select>
             </div>

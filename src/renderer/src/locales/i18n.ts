@@ -9,7 +9,7 @@ import * as ko from "@shared/lang/ko.json";
 export const langs = ["zh-CN", "en", "ja", "ko"];
 export const langMaps = new Map([
     ["zh-CN", "简体中文"],
-    ["en", "English"],
+    ["en-US", "English"],
     ["ja", "日本語"],
     ["ko", "한국어"],
 ]);
@@ -17,7 +17,7 @@ const resources = {
     "zh-CN": {
         translation: zh_CN,
     },
-    "en": {
+    "en-US": {
         translation: en,
     },
     "ja": {

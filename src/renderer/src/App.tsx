@@ -3,7 +3,7 @@ import ChatPage from './page/ChatPage';
 import SettingPage from "./page/Setting";
 import { Config } from "@renderer/lib/data/config";
 import { globalConfig } from "@renderer/lib/state/confState";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { geminiInit, registerSetCurrentSessionID, registerSetCurrentSession, registerSetCurrentModel, registerAbortMessage, registerDeleteAbortMessage } from "./lib/ai/gemini";
 import { getAllMcpServers, getAllSessions } from "./lib/data/db";
 import { uiState } from "./lib/state/uistate";
@@ -23,14 +23,13 @@ function App({ config }: { config: Config | null }) {
   const setCurrentSession = uiState((state) => state.setCurrentSession);
   const setPrompt = uiState((state) => state.setPrompt);
   const setModels = uiState((state) => state.setModels);
-  const setModel = uiState((state) => state.setCurrentModel);
   const setIsMac = uiState((state) => state.setIsMac);
   const setCurrentModel = uiState((state) => state.setCurrentModel);
   const setMcpServers = mcpServersState((state) => state.setMcpServers);
   const addMessageCancel = uiState(state => state.addMessageCancel);
   const deleteMessageCancel = uiState(state => state.deleteMessageCancel);
-  const init = async (conf: Config) => {
-    setModel(conf.defaultModel);
+  const init = useCallback(async (conf: Config) => {
+    setCurrentModel(conf.defaultModel);
     geminiInit(conf);
     registerSetCurrentSessionID(setCurrentSessionID);
     registerSetCurrentSession((s: session | null) => {
@@ -59,7 +58,7 @@ function App({ config }: { config: Config | null }) {
     if (conf.createQuickWindow) {
       createQuickWindow(conf.quickWinHotkey);
     }
-  }
+  }, [config]);
   useEffect(() => {
     setConfig(config);
     (async () => {
@@ -93,7 +92,7 @@ function App({ config }: { config: Config | null }) {
     return () => {
       clearInterval(intval);
     }
-  }, []);
+  }, [init]);
   return (
     <>
       <Router>

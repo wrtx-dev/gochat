@@ -36,15 +36,38 @@ export function createMessageText(content?: Content, groundData?: GroundingMetad
             }
         }
     }
+    let supports: Map<string, string> | undefined = undefined;
     if (groundData) {
         if (groundData.searchEntryPoint?.renderedContent) {
             text += "\n" + groundData.searchEntryPoint.renderedContent + "\n";
         }
+        if (groundData.groundingSupports && groundData.groundingChunks) {
+            if (!supports) {
+                supports = new Map<string, string>();
+            }
+            for (const support of groundData.groundingSupports) {
+                if (support.segment && support.segment.text && support.groundingChunkIndices) {
+                    if (support.groundingChunkIndices.length > 0) {
+                        let links = "";
+                        for (const index of support.groundingChunkIndices) {
+                            const chunk = groundData.groundingChunks[index];
+                            if (chunk.web && chunk.web.uri) {
+                                const title = chunk.web.title ? chunk.web.title : chunk.web.domain ? chunk.web.domain : `${index}`;
+                                links += `[${title}](${chunk.web.uri}) `;
+                            }
+                        }
+                        supports.set(support.segment.text, `${support.segment.text} [${links.trim()}]`);
+
+                    }
+                }
+            }
+        }
     }
-    return thinking ? { thinking: text.length > 0 ? text : undefined, msgText: undefined, fcall: fc } : {
+    return thinking ? { thinking: text.length > 0 ? text : undefined, msgText: undefined, fcall: fc, supports: supports } : {
         thinking: undefined,
         msgText: text.length > 0 ? text : undefined,
         fcall: fc,
+        supports: supports
     };
 }
 
@@ -121,7 +144,7 @@ export async function createMessageListFromRawMessage(id: string) {
             }
             tmpMessage = undefined;
         }
-        const { thinking, msgText, fcall } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
+        const { thinking, msgText, fcall, supports } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
         if (thinking || msgText || fcall || rawMsg.hasError) {
             if (!tmpMessage) {
                 tmpMessage = {
@@ -155,6 +178,14 @@ export async function createMessageListFromRawMessage(id: string) {
                 if (rawMsg.files && rawMsg.files.length > 0) {
                     tmpMessage.files = [...tmpMessage.files, ...rawMsg.files];
                 }
+            }
+            if (supports && supports.size > 0) {
+                [...Array.from(supports.keys())].map((key) => {
+                    const v = supports.get(key);
+                    if (tmpMessage && tmpMessage.message) {
+                        tmpMessage.message = tmpMessage.message.replace(key, v || key);
+                    }
+                })
             }
             if (isNew) {
                 isNew = !isNew;
