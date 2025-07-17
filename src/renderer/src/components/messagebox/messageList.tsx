@@ -284,10 +284,64 @@ const ThoughtBlock = memo(({ thought, thinking, ...props }: { thought: string, t
 }, (prev, prop) => prev.thought === prop.thought && prev.thinking === prop.thinking);
 
 const UserMessage = memo(({ msg }: { msg: Message }) => {
+    const { t } = useTranslation();
+    const setMessageText = uiState(state => state.setMessageText);
+    const messageText = uiState(state => state.messageText);
+    const msgRef = useRef<HTMLDivElement>(null);
+    const getSelectedTextOrAllText = () => {
+        const selection = window.getSelection();
+        if (selection) {
+            if (selection.rangeCount > 0 && msgRef.current) {
+                if (msgRef.current.contains(selection.getRangeAt(0).commonAncestorContainer) && selection.toString().length > 0) {
+                    return selection.toString();
+                }
+            }
+        }
+        return msg.message;
+    }
     return (
         <div className="inline-block max-w-2/3">
-            <div className="flex flex-col mt-2 px-2 max-w-full bg-neutral-200/50 items-center justify-center rounded-sm">
-                <MarkdownMessage content={msg.message} disableRawHtml={true} />
+            <div className="flex flex-col mt-2 px-2 max-w-full bg-neutral-200/50 items-center justify-center rounded-sm" ref={msgRef}>
+                <ContextMenu>
+                    <ContextMenuTrigger>
+                        <MarkdownMessage content={msg.message} disableRawHtml={true} />
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="text-xs w-32">
+                        <ContextMenuItem
+                            className="text-xs"
+                            onClick={() => {
+                                const copyText = getSelectedTextOrAllText();
+
+                                navigator.clipboard.writeText(copyText);
+
+
+                            }}
+                        >
+                            {t("copy")}
+                            <ContextMenuShortcut>
+                                <Copy strokeWidth={1} />
+                            </ContextMenuShortcut>
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                            className="text-xs"
+                            onClick={() => {
+                                const quoteText = getSelectedTextOrAllText();
+                                const split = "====="
+                                if (messageText.length < 1) {
+                                    setMessageText(`${quoteText}\n${split}\n`)
+                                } else {
+                                    setMessageText(`${messageText}\n${split}\n${quoteText}\n${split}\n`)
+                                }
+                            }}
+                        >
+                            {t("quote")}
+                            <ContextMenuShortcut>
+                                <SquareDashedMousePointer strokeWidth={1} />
+                            </ContextMenuShortcut>
+                        </ContextMenuItem>
+                    </ContextMenuContent>
+                </ContextMenu>
+
                 {msg.files.length > 0 && <div className="w-full flex flex-row flex-wrap">
                     {msg.files.map((f) => {
                         const fileType = getFileIconType(f.path);
