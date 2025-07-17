@@ -11,8 +11,9 @@ export interface Message {
     files: FileInfo[],
     hasFuncCall: boolean,
     funcCalls: FunctionCall[],
-    finished: boolean
-    sessionID?: string
+    finished: boolean,
+    sessionID?: string,
+    renderedContent?: string,
 }
 export interface FileInfo {
     path: string,

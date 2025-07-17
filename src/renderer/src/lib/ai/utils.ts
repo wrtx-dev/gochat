@@ -37,9 +37,10 @@ export function createMessageText(content?: Content, groundData?: GroundingMetad
         }
     }
     let supports: Map<string, string> | undefined = undefined;
+    let renderedContent: string | undefined = undefined;
     if (groundData) {
         if (groundData.searchEntryPoint?.renderedContent) {
-            text += "\n" + groundData.searchEntryPoint.renderedContent + "\n";
+            renderedContent = "\n" + groundData.searchEntryPoint.renderedContent + "\n";
         }
         if (groundData.groundingSupports && groundData.groundingChunks) {
             if (!supports) {
@@ -63,11 +64,12 @@ export function createMessageText(content?: Content, groundData?: GroundingMetad
             }
         }
     }
-    return thinking ? { thinking: text.length > 0 ? text : undefined, msgText: undefined, fcall: fc, supports: supports } : {
+    return thinking ? { thinking: text.length > 0 ? text : undefined, msgText: undefined, fcall: fc, supports: supports, renderedContent } : {
         thinking: undefined,
         msgText: text.length > 0 ? text : undefined,
         fcall: fc,
-        supports: supports
+        supports: supports,
+        renderedContent: renderedContent
     };
 }
 
@@ -144,7 +146,7 @@ export async function createMessageListFromRawMessage(id: string) {
             }
             tmpMessage = undefined;
         }
-        const { thinking, msgText, fcall, supports } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
+        const { thinking, msgText, fcall, supports, renderedContent } = createMessageText(rawMsg.content, rawMsg.groundMetadata);
         if (thinking || msgText || fcall || rawMsg.hasError) {
             if (!tmpMessage) {
                 tmpMessage = {
@@ -159,6 +161,7 @@ export async function createMessageListFromRawMessage(id: string) {
                     funcCalls: fcall ? fcall : [],
                     finished: true,
                     sessionID: id,
+                    renderedContent: renderedContent,
                 }
             } else if (tmpMessage) {
                 if (msgText) {
@@ -170,6 +173,9 @@ export async function createMessageListFromRawMessage(id: string) {
                 if (fcall && fcall.length > 0) {
                     tmpMessage.hasFuncCall = true;
                     tmpMessage.funcCalls = [...tmpMessage.funcCalls, ...fcall];
+                }
+                if (renderedContent) {
+                    tmpMessage.renderedContent = renderedContent;
                 }
                 if (rawMsg.hasError) {
                     tmpMessage.isError = true;

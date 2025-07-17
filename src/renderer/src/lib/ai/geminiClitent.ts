@@ -70,11 +70,11 @@ export class GeminiClient {
         }
     }
 
-    private createAssistantMsg(firstResponse: boolean, msgText: string, thinking?: string, fcall?: FunctionCall[], sessionID?: string, supports?: Map<string, string>) {
+    private createAssistantMsg(firstResponse: boolean, msgText: string, thinking?: string, fcall?: FunctionCall[], sessionID?: string, supports?: Map<string, string>, renderedContent?: string) {
         let msg: Message = {
             role: "assistant",
             id: "",
-            message: msgText || "",
+            message: `${msgText ? msgText : ""}`,
             thinking: thinking,
             isError: false,
             errInfo: "",
@@ -82,7 +82,8 @@ export class GeminiClient {
             hasFuncCall: fcall ? fcall.length > 0 : false,
             funcCalls: fcall ? [...fcall] : [],
             finished: false,
-            sessionID: sessionID
+            sessionID: sessionID,
+            renderedContent: renderedContent,
         };
         if (this.msgCtrl) {
             this.msgCtrl(msg, firstResponse, supports);
@@ -121,9 +122,9 @@ export class GeminiClient {
                 for (const v of chunk.candidates) {
                     hasContent = true;
 
-                    const { thinking, msgText, fcall, supports } = createMessageText(v.content, v.groundingMetadata);
+                    const { thinking, msgText, fcall, supports, renderedContent } = createMessageText(v.content, v.groundingMetadata);
                     if (msgText || thinking || fcall) {
-                        this.createAssistantMsg(firstResponse, msgText ? msgText : "", thinking, fcall, sessionID, supports);
+                        this.createAssistantMsg(firstResponse, msgText ? msgText : "", thinking, fcall, sessionID, supports, renderedContent);
                         if (firstResponse) {
                             firstResponse = !firstResponse;
                         }
@@ -329,7 +330,10 @@ export class GeminiClient {
         await this.updateSession(sessionID);
 
         if (!hasError && !this.tmpSession && history && conf.autoGenSessionName && rounded >= conf.genSessionNameAfter && userSession && !userSession.named) {
-            this.createSessionTitle(history, conf, userSession)
+            this.createSessionTitle(history, conf, userSession);
+            if (userSession.uuid === this.sessionState?.sessionID) {
+                this.sessionState!.session!.named = true;
+            }
         }
     }
 

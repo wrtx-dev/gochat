@@ -66,6 +66,9 @@ export default function MessageList() {
                             newMsg.errInfo = msg.errInfo;
                         }
                     }
+                    if (msg.renderedContent) {
+                        newMsg.renderedContent = msg.renderedContent;
+                    }
                     return [...prev.slice(0, -1), newMsg];
                 });
             }
@@ -184,7 +187,7 @@ const AssistentMessage = memo(({ msg, finished, ...props }: { msg: Message, fini
                 <div className="flex flex-col w-full" ref={msgRef}>
                     <ContextMenu>
                         <ContextMenuTrigger>
-                            <MarkdownMessage content={msg.message} disableRawHtml={false} />
+                            <MarkdownMessage content={`${msg.message}${msg.renderedContent || ""}`} disableRawHtml={false} />
                         </ContextMenuTrigger>
                         <ContextMenuContent className="text-xs w-32">
                             <ContextMenuItem
@@ -206,7 +209,7 @@ const AssistentMessage = memo(({ msg, finished, ...props }: { msg: Message, fini
                                 className="text-xs"
                                 onClick={() => {
                                     const quoteText = getSelectedTextOrAllText();
-                                    const split = "====="
+                                    const split = "\n---"
                                     if (messageText.length < 1) {
                                         setMessageText(`${quoteText}\n${split}\n`)
                                     } else {
@@ -300,7 +303,7 @@ const UserMessage = memo(({ msg }: { msg: Message }) => {
         return msg.message;
     }
     return (
-        <div className="inline-block max-w-2/3">
+        <div className="inline-block max-w-2/3 break-all overflow-hidden">
             <div className="flex flex-col mt-2 px-2 max-w-full bg-neutral-200/50 items-center justify-center rounded-sm" ref={msgRef}>
                 <ContextMenu>
                     <ContextMenuTrigger>
@@ -326,7 +329,7 @@ const UserMessage = memo(({ msg }: { msg: Message }) => {
                             className="text-xs"
                             onClick={() => {
                                 const quoteText = getSelectedTextOrAllText();
-                                const split = "====="
+                                const split = "\n---"
                                 if (messageText.length < 1) {
                                     setMessageText(`${quoteText}\n${split}\n`)
                                 } else {
