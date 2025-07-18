@@ -54,10 +54,10 @@ export function createMessageText(content?: Content, groundData?: GroundingMetad
                             const chunk = groundData.groundingChunks[index];
                             if (chunk.web && chunk.web.uri) {
                                 const title = chunk.web.title ? chunk.web.title : chunk.web.domain ? chunk.web.domain : `${index}`;
-                                links += `[${title}](${chunk.web.uri}) `;
+                                links += `[*\`${title}\`*](${chunk.web.uri} "${chunk.web.uri}") `;
                             }
                         }
-                        supports.set(support.segment.text, `${support.segment.text} [${links.trim()}]`);
+                        supports.set(support.segment.text, `${support.segment.text} ${links.trim()}`);
 
                     }
                 }
