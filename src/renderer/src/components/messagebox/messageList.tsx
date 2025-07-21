@@ -10,6 +10,7 @@ import { uiState } from "@renderer/lib/state/uistate";
 import { useTranslation } from "react-i18next";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";
 import { saveFileDialog } from "@renderer/lib/util/misc";
+import { searchState } from "@renderer/lib/state/searchState";
 
 export default function MessageList() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -140,7 +141,69 @@ export default function MessageList() {
 
     useLayoutEffect(() => {
         adjustSpaceHeight();
-    }, [messages, adjustSpaceHeight])
+    }, [messages, adjustSpaceHeight]);
+
+    const query = searchState(state => state.query);
+    const setSearchRange = searchState(state => state.setSearchRange);
+    const ignoreCase = searchState(state => state.ignoreCase);
+    const search = useCallback(() => {
+        const ranges: Range[] = [];
+        if (query && containerRef && containerRef.current) {
+            const regexp = new RegExp(query, ignoreCase && /^[a-zA-Z\.\s]+$/.test(query) ? "gi" : "g");
+            let fullText = "";
+            const walker = document.createTreeWalker(containerRef.current, NodeFilter.SHOW_TEXT);
+            let allNodeInfos: { node: Node, startOffset: number }[] = [];
+            while (walker.nextNode()) {
+
+                allNodeInfos.push({
+                    node: walker.currentNode,
+                    startOffset: fullText.length,
+                });
+                fullText += walker.currentNode.nodeValue;
+            }
+
+            let match: RegExpExecArray | null = null;
+
+            while ((match = regexp.exec(fullText))) {
+                const matchStart = match.index;
+                const matchEnd = matchStart + match[0].length;
+                let startNode: Node | null = null;
+                let endNode: Node | null = null;
+                let startOffset = 0;
+                let endOffset = 0;
+                for (const n of allNodeInfos) {
+                    if (matchStart >= n.startOffset && matchStart < (n.node.nodeValue?.length ?? 0) + n.startOffset) {
+                        startNode = n.node;
+                        startOffset = matchStart - n.startOffset;
+                        break;
+                    }
+                }
+                for (const n of allNodeInfos) {
+                    if (matchEnd > n.startOffset && matchEnd <= n.startOffset + (n.node.nodeValue?.length ?? 0)) {
+                        endNode = n.node;
+                        endOffset = matchEnd - n.startOffset;
+                        break;
+                    }
+                }
+                if (startNode && endNode) {
+                    const range = new Range();
+                    range.setStart(startNode, startOffset);
+                    range.setEnd(endNode, endOffset);
+                    ranges.push(range);
+                }
+            }
+        }
+        return ranges.length > 0 ? ranges : undefined;
+    }, [query, ignoreCase]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const ranges = search();
+            setSearchRange(ranges);
+        }, 100);
+        return () => {
+            clearTimeout(timer);
+        }
+    }, [search]);
 
     return (
         <div className="flex flex-col w-full h-full overflow-x-hidden overflow-y-auto flex-1 min-h-0 bg-white pb-2" ref={containerRef}>

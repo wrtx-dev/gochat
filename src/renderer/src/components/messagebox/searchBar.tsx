@@ -2,16 +2,41 @@ import { useTranslation } from "react-i18next";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Regex, CaseUpper, CircleX } from "lucide-react";
+import { CircleX } from "lucide-react";
 import { Toggle } from "../ui/toggle";
 import { searchState } from "@renderer/lib/state/searchState";
+import { useEffect } from "react";
 
 export default function SearchBar() {
     const show = searchState(state => state.show);
-    const setShow = searchState(state => state.setShow);
     const setQuery = searchState(state => state.setQuery);
     const query = searchState(state => state.query);
+    const searchRange = searchState(state => state.searchRange);
+    const currentIndex = searchState(state => state.currentIndex);
+    const resetSearch = searchState(state => state.resetSearch);
+    const subCurrentIndex = searchState(state => state.subCurrentIndex);
+    const addCurrentIndex = searchState(state => state.addCurrentIndex);
+    const ignoreCase = searchState(state => state.ignoreCase);
+    const setIgnoreCase = searchState(state => state.setIgnoreCase);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        CSS.highlights.clear();
+        if (searchRange && searchRange.length > 0) {
+            const allHighlight = new Highlight(...searchRange);
+            CSS.highlights.set("search-matches", allHighlight);
+            if (currentIndex > -1 && searchRange[currentIndex]) {
+                const p = searchRange[currentIndex].startContainer.parentElement;
+                const hightlight = new Highlight(searchRange[currentIndex]);
+                CSS.highlights.set("current-match", hightlight);
+                p?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'nearest'
+                })
+            }
+        }
+    }, [searchRange, currentIndex])
     return (
         <div className={`flex flex-row py-1 items-center w-full h-8 px-2 gap-2 bg-neutral-200/50 ${!show && "hidden"}`}>
             <Label
@@ -20,7 +45,7 @@ export default function SearchBar() {
                 {t("messageBox.searchContext")}
             </Label>
             <div
-                className="flex-1 border border-neutral-300 rounded-sm bg-white inline-flex  flex-row items-center justify-start px-0.5 gap-1"
+                className="flex-1 border border-neutral-300 rounded-sm bg-white inline-flex  flex-row items-center justify-start px-0.5 gap-1 transition-all duration-200"
             >
                 <Input
                     className="flex-1 h-3/4 px-1 focus-visible:ring-0 focus-visible:outline-0 rounded-sm focuse-visible:shadow-none shadow-none border-none focus-visible:border-none"
@@ -29,17 +54,51 @@ export default function SearchBar() {
                     }}
                     value={query ? query : ""}
                 />
-                <Toggle size="sm" className="rounded-sm w-3 h-5" >
-                    <Regex className="size-4" strokeWidth={1} />
+                <Toggle
+                    size={"sm"}
+                    className="rounded-sm size-5 select-none text-xs font-light"
+                    pressed={!ignoreCase}
+                    onPressedChange={() => {
+                        console.log("set ignore case:", !ignoreCase);
+                        setIgnoreCase(!ignoreCase);
+                    }}
+                >
+                    {"Ab"}
                 </Toggle>
-                <Toggle size={"sm"} className="rounded-sm w-3 h-5">
-                    <CaseUpper className="size-4" strokeWidth={1} />
-                </Toggle>
+                {query && query.length > 0 && <Button
+                    variant="ghost"
+                    size={"sm"}
+                    className="rounded-full size-4 text-xs"
+                    onClick={() => {
+                        setQuery(undefined)
+                    }}
+                >
+                    <CircleX className="size-4" strokeWidth={1} />
+                </Button>}
             </div>
-            <Button variant="outline" className="rounded-sm px-0.5 h-6 text-xs">
+            {searchRange !== undefined && <Label
+                className="text-xs select-none cursor-default text-neutral-600 font-light"
+            >
+                {`${currentIndex + 1}/${searchRange?.length}`}
+            </Label>}
+            <Button
+                variant="outline"
+                className="rounded-sm px-0.5 h-6 text-xs"
+                disabled={searchRange === undefined || searchRange.length === 0 || currentIndex < 1}
+                onClick={() => {
+                    subCurrentIndex();
+                }}
+            >
                 {t("messageBox.prev")}
             </Button>
-            <Button variant="outline" className="rounded-sm px-0.5 h-6 text-xs">
+            <Button
+                variant="outline"
+                className="rounded-sm px-0.5 h-6 text-xs"
+                disabled={searchRange === undefined || searchRange.length === 0 || currentIndex >= searchRange.length - 1}
+                onClick={() => {
+                    addCurrentIndex();
+                }}
+            >
                 {t("messageBox.next")}
             </Button>
             <Button
@@ -47,8 +106,7 @@ export default function SearchBar() {
                 size={"sm"}
                 className="rounded-full size-4 text-xs"
                 onClick={() => {
-                    setShow(false);
-                    setQuery(undefined);
+                    resetSearch();
                 }}
             >
                 <CircleX className="size-4" strokeWidth={1} />

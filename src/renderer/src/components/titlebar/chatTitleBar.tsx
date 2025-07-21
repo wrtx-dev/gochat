@@ -9,6 +9,7 @@ import ChatModelsMenu from "./models";
 import { globalConfig } from "@renderer/lib/state/confState";
 import TrafficLight from "./trafficLight";
 import { stopMcpServers } from "@renderer/lib/util/mcpIpc";
+import { searchState } from "@renderer/lib/state/searchState";
 
 export function ChatTitleBar() {
     const { t } = useTranslation();
@@ -27,6 +28,7 @@ export function ChatTitleBar() {
     const setPrompt = uiState((state) => state.setPrompt);
     const conf = globalConfig((state) => state.config);
     const isMac = uiState((state) => state.isMac);
+    const resetSearch = searchState(state => state.resetSearch);
     return (
         <div className="titlebar absolute flex flex-row top-0 left-0 h-10 bg-transparent w-full items-center justify-between">
             <div className="inline-flex flex-row gap-4 items-center">
@@ -56,6 +58,7 @@ export function ChatTitleBar() {
                             if (currentTool.includes("function")) {
                                 stopMcpServers();
                             }
+                            resetSearch();
                             setCurrentTool([]);
                             setPrompt(conf?.systemInstruction || t("defaultSystemPrompt"))
                         })();
