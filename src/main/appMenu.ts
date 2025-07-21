@@ -13,6 +13,7 @@ export function setupApplicationMenu() {
             submenu: [
                 { label: t("copy"), role: "copy" as const },
                 { label: t("paste"), role: "paste" as const },
+                { label: t("cut"), role: "cut" },
                 { label: t("selectAll"), role: "selectAll" as const },
                 { label: t("undo"), role: "undo" as const }
             ]
