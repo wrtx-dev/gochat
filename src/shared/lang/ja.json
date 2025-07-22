@@ -49,7 +49,7 @@
   "selectHistoryModel": "履歴セッションモデルを選択",
   "newSessionModel": "新規セッションモデル",
   "selectNewSessionModel": "新規セッションモデルを選択",
-  "autoGenerateTitle": "セッションタイトルを自動生成",
+  "autoGenerateTitle": "{{rounds}}回の会話後にセッションタイトルを自動生成",
   "select": "選択",
   "roundsAfter": "回の会話後に",
   "maxOutputTokens": "最大出力トークン数",
@@ -133,7 +133,9 @@
     "messageSendKey": "メッセージ送信キー",
     "createTray": "トレイアイコンを作成",
     "createQuickWindow": "クイックウィンドウを作成",
-    "showQuickWin": "クイックウィンドウの使用法を表示"
+    "showQuickWin": "クイックウィンドウの使用法を表示",
+    "autoDelteSession": "セッションを自動削除、セッション保持",
+    "days": "日"
   },
   "app": {
     "about": "GoChatについて",

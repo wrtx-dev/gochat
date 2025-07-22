@@ -58,6 +58,8 @@ export interface Config {
     createQuickWindow: boolean,
     sendKey: EnumMessageSendKey,
     quickWinHotkey: EnumQuickWinHotKey,
+    autoDelteSession?: boolean,
+    autoDeleteSessionCutoff?: number,
 }
 
 export enum historySessionModel {

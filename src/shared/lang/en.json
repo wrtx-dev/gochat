@@ -49,7 +49,7 @@
   "selectHistoryModel": "Select History Session Model",
   "newSessionModel": "New Session Model",
   "selectNewSessionModel": "Select New Session Model",
-  "autoGenerateTitle": "Auto generate session title after",
+  "autoGenerateTitle": "Auto generate session title after {{rounds}} rounds of conversation",
   "select": "Select",
   "roundsAfter": "rounds of conversation",
   "maxOutputTokens": "Max Output Tokens",
@@ -133,7 +133,9 @@
     "messageSendKey": "Message send key",
     "createTray": "Create tray icon",
     "createQuickWindow": "Create quick window",
-    "showQuickWin": "Show quick window usage"
+    "showQuickWin": "Show quick window usage",
+    "autoDelteSession": "Auto delete session, session retention",
+    "days": "days"
   },
   "app": {
     "about": "About",

@@ -49,7 +49,7 @@
   "selectHistoryModel": "히스토리 세션 모델 선택",
   "newSessionModel": "새 세션 모델",
   "selectNewSessionModel": "새 세션 모델 선택",
-  "autoGenerateTitle": "세션 제목 자동 생성",
+  "autoGenerateTitle": "{{rounds}}회 대화 후 세션 제목 자동 생성",
   "select": "선택",
   "roundsAfter": "회 대화 후",
   "maxOutputTokens": "최대 출력 토큰 수",
@@ -133,7 +133,9 @@
     "messageSendKey": "메시지 전송 키",
     "createTray": "트레이 아이콘 생성",
     "createQuickWindow": "빠른 창 생성",
-    "showQuickWin": "빠른 창 사용법 표시"
+    "showQuickWin": "빠른 창 사용법 표시",
+    "autoDelteSession": "세션 자동 삭제, 세션 보존",
+    "days": "일"
   },
   "app": {
     "about": "GoChat 정보",
