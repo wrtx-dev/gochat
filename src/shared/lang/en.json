@@ -155,5 +155,9 @@
     "next": "Next",
     "prev": "Previous"
   },
-  "moreInfo": "For more information please visit AI.wrtx.dev"
+  "moreInfo": "For more information please visit AI.wrtx.dev",
+  "message": {
+    "preview": "Preview",
+    "copy": "Copy"
+  }
 }

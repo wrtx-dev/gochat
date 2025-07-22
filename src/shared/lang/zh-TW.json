@@ -126,7 +126,9 @@
         "messageSendKey": "主視窗消息發送按鍵",
         "createTray": "創建托盤圖標",
         "createQuickWindow": "創建快捷視窗",
-        "showQuickWin": "顯示快捷視窗使用"
+        "showQuickWin": "顯示快捷視窗使用",
+        "autoDelteSession": "自動刪除會話，會話保留",
+        "days": "天"
     },
     "quote": "引用",
     "exportMD": "導出markdown",
@@ -153,5 +155,9 @@
         "next": "下一個",
         "prev": "上一個"
     },
-    "moreInfo": "更多信息請訪問 AI.wrtx.dev"
+    "moreInfo": "更多信息請訪問 AI.wrtx.dev",
+    "message": {
+        "preview": "預覽",
+        "copy": "複製"
+    }
 }

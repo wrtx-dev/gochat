@@ -155,5 +155,9 @@
     "next": "下一个",
     "prev": "上一个"
   },
+  "message": {
+    "preview": "预览",
+    "copy": "复制"
+  },
   "moreInfo": "更多信息请访问 AI.wrtx.dev"
 }
