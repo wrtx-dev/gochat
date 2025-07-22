@@ -32,7 +32,7 @@ export default function Mermaid({ content, loading }: { content: string, loading
             }
             try {
                 // console.log("code before parse:", code);
-                await mermaid.parse(content);
+                // await mermaid.parse(content);
                 const { svg } = await mermaid.render(id, content);
                 setSvg(svg);
                 setError(false);
@@ -115,7 +115,7 @@ const SvgPreviewer = forwardRef(({ svg }: { svg: string }, ref: Ref<any>) => {
                     preview mermaid graph
                 </DialogTitle>
                 <DialogDescription className="hidden">preview mermaid graph</DialogDescription>
-                <div className="mermaid text-xs overflow-y-auto" dangerouslySetInnerHTML={{ __html: svg }} />
+                <div className="flex flex-row justify-center items-center mermaid text-xs overflow-y-auto w-full h-full" dangerouslySetInnerHTML={{ __html: svg }} />
             </DialogContent>
         </Dialog>
     )
