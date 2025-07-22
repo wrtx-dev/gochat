@@ -191,7 +191,8 @@ export class ChatSession {
 
     private createGenerateContentConfig() {
         this.chatConfig = {
-            systemInstruction: this.systemInstruction,
+            systemInstruction: this.isImageGeneration() ? undefined : this.systemInstruction,
+            responseModalities: this.isImageGeneration() ? [Modality.TEXT, Modality.IMAGE] : undefined,
             topP: this.conf!.topP,
             temperature: this.conf!.temprature,
             maxOutputTokens: this.conf!.maxOutputToken,

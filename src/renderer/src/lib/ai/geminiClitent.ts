@@ -451,6 +451,7 @@ export class GeminiClient {
             await this.changeCurrenSession(session);
             await this.setHistoryMessage(session);
             this.loadFinished();
+            this.model = this.sessionState!.session!.model;
         }
     }
 
