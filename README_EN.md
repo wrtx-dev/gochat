@@ -22,6 +22,7 @@ A desktop client for Gemini AI built with Electron + React + TypeScript
 - Markdown message rendering and Mermaid diagram support
 - Multi-language internationalization (i18n) with support for:
   - Simplified Chinese (zh-CN)
+  - Traditional Chinese (Macau) (zh-TW)
   - English (en)
   - Japanese (ja)
   - Korean (ko)
