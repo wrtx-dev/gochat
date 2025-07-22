@@ -51,4 +51,4 @@ jobs:
             - name: Build windows x86 App
               shell: bash
               run: |
-                pnpm run build:mac --ia32
+                pnpm run build:win --ia32
