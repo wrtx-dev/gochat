@@ -1,0 +1,54 @@
+name: release app
+on:
+    push:
+        branches:
+            - release/*
+            - main
+
+jobs:
+    build:
+        name: Build release app
+        runs-on: macos-latest
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v3
+              with:
+                ref: ${{ github.ref }}
+                fetch-depth: 0
+            - name: Setup Node
+              uses: actions/setup-node@v3
+              with:
+                node-version: 22
+
+            - name: Install pnpm
+              shell: bash
+              run: npm i -g pnpm
+            
+            - name: install deps
+              shell: bash
+              run: pnpm i
+
+            - name: Build macOS arm64 App
+              shell: bash
+              run: |
+                pnpm run build:mac --arm64
+
+            - name: Build macOS intel x64 App
+              shell: bash
+              run: |
+                pnpm run build:mac --x64
+
+            - name: Build macOS universal App
+              shell: bash
+              run: |
+                pnpm run build:mac --universal
+
+            - name: Build windows x64 App
+              shell: bash
+              run: |
+                pnpm run build:win --x64
+
+            - name: Build windows x86 App
+              shell: bash
+              run: |
+                pnpm run build:mac --ia32

@@ -95,11 +95,11 @@ function App({ config }: { config: Config | null }) {
   }, [init]);
 
   useEffect(() => {
-    let intval: number | null = null;
+    let intval: any | null = null;
     if (conf?.autoDelteSession && conf.autoDeleteSessionCutoff && conf.autoDeleteSessionCutoff > 0) {
       intval = setInterval(async () => {
         const now = new Date();
-        if (now.getHours() !== 0 || now.getMinutes() !== 0) {
+        if (now.getHours() !== 0 || now.getMinutes() !== 0 || conf.autoDeleteSessionCutoff === undefined) {
           return;
         }
         const cutoff = Math.floor(Date.now() / 1000) - conf.autoDeleteSessionCutoff * 24 * 60 * 60;
