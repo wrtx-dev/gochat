@@ -17,10 +17,10 @@ export default function AboutInfo() {
                         {t("app.aboutDescription")}
                     </p>
                     <a href="https://github.com/wrtx-dev/gochat" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                        github repository
+                        github.com/wrtx-dev/gochat
                     </a>
                     <a href="https://ai.wrtx.dev" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" >
-                        更多信息
+                        {t("moreInfo")}
                     </a>
                 </CardContent>
             </Card>
