@@ -83,6 +83,10 @@ pnpm build:mac    # macOS版本
   - Vite构建工具
   - Dexie (IndexedDB封装)
 
+## 项目网址
+
+[项目网址](https://ai.wrtx.dev/)
+
 ## 许可证
 
 Apache 2.0 © wrtx.dev

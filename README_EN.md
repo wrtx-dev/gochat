@@ -83,6 +83,10 @@ pnpm build:mac    # macOS version
   - Vite build tool
   - Dexie (IndexedDB wrapper)
 
+## Project Website
+
+[Project Website](https://ai.wrtx.dev/)
+
 ## License
 
 Apache 2.0 © wrtx.dev
