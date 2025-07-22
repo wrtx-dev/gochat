@@ -108,19 +108,21 @@ export class ChatSession {
 
     public changeModel(model: string) {
         if (this.model !== model) {
+            this.model = model;
             if (this.chatSession) {
                 this.chatParameters.model = model;
                 const history = this.chatSession.getHistory();
-                if (!this.systemInstruction) {
-                    this.systemInstruction = this.systemInstruction;
+                if (!this.chatConfig!.systemInstruction) {
+                    this.chatConfig!.systemInstruction = this.systemInstruction;
                 }
                 if (this.isImageGeneration()) {
                     this.chatConfig!.responseModalities = [Modality.TEXT, Modality.IMAGE];
                     this.chatConfig!.systemInstruction = undefined;
+                } else {
+                    this.chatConfig!.responseModalities = undefined;
                 }
 
                 this.chatConfig!.thinkingConfig = this.genThoughtConfig();
-
                 this.chatSession = this.client.chats.create({
                     ...this.chatParameters,
                     history: history,
