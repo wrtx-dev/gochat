@@ -118,6 +118,9 @@ export class ChatSession {
                     this.chatConfig!.responseModalities = [Modality.TEXT, Modality.IMAGE];
                     this.chatConfig!.systemInstruction = undefined;
                 }
+
+                this.chatConfig!.thinkingConfig = this.genThoughtConfig();
+
                 this.chatSession = this.client.chats.create({
                     ...this.chatParameters,
                     history: history,

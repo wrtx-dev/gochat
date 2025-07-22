@@ -15,7 +15,7 @@ export default function ImagePreview({ src }: { src: string }) {
                     <Expand strokeWidth={1} />
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="p-0 max-w-[90vh] overflow-x-hidden overflow-y-auto rounded-none border-none bg-transparent outline-none shadow-none w-auto" onContextMenu={(e) => {
+            <DialogContent showCloseButton={true} className="p-0 min-w-[80vw] lg:min-w-[70vw] overflow-x-hidden overflow-y-auto rounded-none border-none bg-transparent outline-none shadow-none w-auto" onContextMenu={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
             }}>
