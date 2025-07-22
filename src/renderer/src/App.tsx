@@ -5,7 +5,7 @@ import { Config } from "@renderer/lib/data/config";
 import { globalConfig } from "@renderer/lib/state/confState";
 import { useCallback, useEffect } from "react";
 import { geminiInit, registerSetCurrentSessionID, registerSetCurrentSession, registerSetCurrentModel, registerAbortMessage, registerDeleteAbortMessage } from "./lib/ai/gemini";
-import { getAllMcpServers, getAllSessions } from "./lib/data/db";
+import { getAllMcpServers, getAllSessions, deleteSessionByDate } from "./lib/data/db";
 import { uiState } from "./lib/state/uistate";
 import { getModelsList } from "./lib/util/model";
 import { session } from "@shared/types/session";
@@ -93,6 +93,33 @@ function App({ config }: { config: Config | null }) {
       clearInterval(intval);
     }
   }, [init]);
+
+  useEffect(() => {
+    let intval: number | null = null;
+    if (conf?.autoDelteSession && conf.autoDeleteSessionCutoff && conf.autoDeleteSessionCutoff > 0) {
+      intval = setInterval(async () => {
+        const now = new Date();
+        if (now.getHours() !== 0 || now.getMinutes() !== 0) {
+          return;
+        }
+        const cutoff = Math.floor(Date.now() / 1000) - conf.autoDeleteSessionCutoff * 24 * 60 * 60;
+        await getAllSessions().then((sessions) => {
+          if (sessions.length > 0) {
+            setSessions(sessions);
+          }
+        });
+        await getAllMcpServers().then((servers) => {
+          setMcpServers(servers);
+        });
+        await deleteSessionByDate(cutoff);
+      }, 40); // 每天检查一次
+    }
+    return () => {
+      if (intval) {
+        clearInterval(intval);
+      }
+    }
+  }, [conf])
   return (
     <>
       <Router>

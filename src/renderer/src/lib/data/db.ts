@@ -136,6 +136,17 @@ class SessionData extends Dexie {
         }
     }
 
+    async deleteSessionByDate(cutoff: number): Promise<void> {
+        try {
+            const sessions = await this.sessions.where("updateTime").below(cutoff).toArray();
+            for (const s of sessions) {
+                await this.deleteSession(s.uuid);
+            }
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async addMcpServer(server: mcpServerInfo): Promise<number> {
         try {
             const id = this.mcpServers.add(server);
@@ -251,4 +262,8 @@ export const setMcpServerStatus = (uuid: string, enabled: boolean) => {
 
 export const editMcpServer = (server: mcpServerInfo) => {
     return SessionsData.editMcpServer(server);
+}
+
+export const deleteSessionByDate = async (cutoff: number): Promise<void> => {
+    return SessionsData.deleteSessionByDate(cutoff);
 }

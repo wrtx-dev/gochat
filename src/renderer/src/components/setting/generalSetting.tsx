@@ -272,6 +272,15 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                 </Select>
             </div>
             <div className="setting-item-row">
+
+                <span className="inline-flex justify-start items-center col-span-3 text-sm select-none cursor-default gap-1.5">
+                    <Checkbox checked={conf.autoDelteSession === true} onCheckedChange={(v) => setConf((state) => ({ ...state, autoDelteSession: v as boolean }))} />
+                    {t("general.autoDelteSession")}
+                    <Input className="w-14 input-comm text-sm font-mono" value={conf.autoDeleteSessionCutoff ?? "7"} onChange={(e) => setConf((prev) => ({ ...prev, autoDeleteSessionCutoff: parseInt(e.target.value) }))} disabled={!conf.autoDelteSession} />
+                    {t("general.days")}
+                </span>
+            </div>
+            <div className="setting-item-row">
                 <span className="setting-item-label">{t("maxOutputTokens")}</span>
                 <Input className="col-span-1 input-comm text-sm font-mono" value={conf.maxOutputToken} onChange={(e) => setConf((prev) => ({ ...prev, maxOutputToken: parseInt(e.target.value) }))} />
             </div>
