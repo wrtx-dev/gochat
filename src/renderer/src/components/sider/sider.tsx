@@ -6,6 +6,7 @@ import SessionItemList from "./sessionlist";
 import { loadSession } from "@renderer/lib/ai/gemini";
 import { useTranslation } from "react-i18next";
 import { stopMcpServers } from "@renderer/lib/util/mcpIpc";
+import { searchState } from "@renderer/lib/state/searchState";
 
 const Sider = forwardRef((_: unknown, ref: Ref<unknown>) => {
     useImperativeHandle(ref, () => ({}));
@@ -16,6 +17,7 @@ const Sider = forwardRef((_: unknown, ref: Ref<unknown>) => {
     const [focusSearch, setFocusSearch] = useState(false);
     const currentTool = uiState(state => state.currentTool);
     const setCurrentTool = uiState(state => state.setCurrentTool);
+    const resetSearch = searchState(state => state.resetSearch);
     const { t } = useTranslation();
     return (
 
@@ -39,6 +41,7 @@ const Sider = forwardRef((_: unknown, ref: Ref<unknown>) => {
                         stopMcpServers();
                     }
                     setCurrentTool([]);
+                    resetSearch();
                     loadSession(uuid);
                 })();
             }} />
