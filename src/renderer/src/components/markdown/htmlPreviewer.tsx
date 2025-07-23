@@ -30,7 +30,10 @@ const HtmlPrivewDialog = forwardRef(({ content }: HtmlPreviewerProps, ref: Ref<a
                 <div className="w-full h-full overflow-y-auto">
                     <iframe
                         className="w-full h-full overflow-auto"
-                        srcDoc={content}
+                        srcDoc={content.replace(
+                            /<script/g,
+                            `<script nonce="32014d26e3d73692b63b178934542b20"`
+                        )}
                         title="HTML Preview"
                         sandbox="allow-scripts"
                     />
