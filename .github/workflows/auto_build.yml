@@ -52,3 +52,14 @@ jobs:
               shell: bash
               run: |
                 pnpm run build:win --ia32
+
+            - name: "upload dmg"
+              uses: actions/upload-artifact@v3
+              with:
+               path: |
+                  dist/*.dmg
+            - name: "upload exe"
+              uses: actions/upload-artifact@v3
+              with:
+               path: |
+                  dist/*.exe
