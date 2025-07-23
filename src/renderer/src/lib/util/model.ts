@@ -25,6 +25,9 @@ export async function getModels(conf: Config) {
         models.map((v) => {
             const name = (v as any).name;
             const displayName = (v as any).displayName;
+            if (getModelVersionNumber(name) < 2.0) {
+                return;
+            }
             modelInfos = [...modelInfos, {
                 name,
                 displayName

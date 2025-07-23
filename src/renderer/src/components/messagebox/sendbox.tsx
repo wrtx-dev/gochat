@@ -219,30 +219,26 @@ export default function SendBox() {
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={(e) => {
                         if (isEnterKeyDown(e)) {
-                            e.preventDefault();
+
                             if (messageText.length === 0) {
                                 return;
                             }
                             switch (gconf!.sendKey) {
                                 case EnumMessageSendKey.Enter:
                                     sendMessageAction();
+                                    e.preventDefault();
                                     break;
                                 case EnumMessageSendKey.CtrlEnter:
                                     if (e.ctrlKey) {
                                         sendMessageAction();
-                                    } else {
-                                        setMessageText(`${messageText}\n`);
+                                        e.preventDefault();
                                     }
                                     break;
                                 case EnumMessageSendKey.AltEnter:
                                     if (e.altKey) {
                                         sendMessageAction();
-                                    } else {
-                                        setMessageText(`${messageText}\n`);
+                                        e.preventDefault();
                                     }
-                                    break;
-                                default:
-                                    setMessageText(`${messageText}\n`);
                                     break;
                             }
                         }

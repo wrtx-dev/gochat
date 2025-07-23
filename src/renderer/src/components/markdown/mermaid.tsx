@@ -32,7 +32,7 @@ export default function Mermaid({ content, loading }: { content: string, loading
             }
             try {
                 // console.log("code before parse:", code);
-                // await mermaid.parse(content);
+                await mermaid.parse(content);
                 const { svg } = await mermaid.render(id, content);
                 setSvg(svg);
                 setError(false);

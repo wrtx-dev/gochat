@@ -137,31 +137,32 @@ export default function QuickSendBox() {
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyDown={(e) => {
                     if (isEnterKeyDown(e)) {
-                        e.preventDefault();
                         if (messageText.length === 0) {
                             return;
                         }
-                        switch (gconf!.sendKey) {
-                            case EnumMessageSendKey.Enter:
-                                sendMessageAction();
-                                break;
-                            case EnumMessageSendKey.CtrlEnter:
-                                if (e.ctrlKey) {
+                        if (isEnterKeyDown(e)) {
+
+                            if (messageText.length === 0) {
+                                return;
+                            }
+                            switch (gconf!.sendKey) {
+                                case EnumMessageSendKey.Enter:
                                     sendMessageAction();
-                                } else {
-                                    setMessageText(`${messageText}\n`);
-                                }
-                                break;
-                            case EnumMessageSendKey.AltEnter:
-                                if (e.altKey) {
-                                    sendMessageAction();
-                                } else {
-                                    setMessageText(`${messageText}\n`);
-                                }
-                                break;
-                            default:
-                                setMessageText(`${messageText}\n`);
-                                break;
+                                    e.preventDefault();
+                                    break;
+                                case EnumMessageSendKey.CtrlEnter:
+                                    if (e.ctrlKey) {
+                                        sendMessageAction();
+                                        e.preventDefault();
+                                    }
+                                    break;
+                                case EnumMessageSendKey.AltEnter:
+                                    if (e.altKey) {
+                                        sendMessageAction();
+                                        e.preventDefault();
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }}

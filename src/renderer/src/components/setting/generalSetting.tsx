@@ -20,9 +20,11 @@ import { Label } from "@radix-ui/react-dropdown-menu";
 import { changeAppLang, createAppTray, createQuickWindow, destroyQuickWindow, destroyTray, notifyConfChanged } from "@renderer/lib/util/misc";
 import { changeLanguage } from "i18next";
 import { EnumQuickWinHotKey, EnumQuickWinHotKeyToString } from "@shared/types/config";
+import { uiState } from "@renderer/lib/state/uistate";
 
 const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>) => {
     const setGlobalConfig = globalConfig((state) => state.setConfig);
+    const setGlobalModels = uiState(state => state.setModels);
     const [conf, setConf] = useState<Config>({
         ...config,
         disableThought: config.disableThought ?? false,
@@ -127,7 +129,11 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                     }))}
                     onBlur={models && models.length > 0 ? undefined : () => {
                         if (!models || models.length === 0) {
-                            refleshModels();
+                            (async () => {
+                                await refleshModels();
+                                const models = await getModelsList();
+                                setGlobalModels(models);
+                            })();
                         }
                     }}
                 />
