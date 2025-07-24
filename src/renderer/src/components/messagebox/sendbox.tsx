@@ -1,7 +1,7 @@
 import { Button } from "@renderer/components/ui/button";
 import { Textarea } from "@renderer/components/ui/textarea";
 import { sendMessage, useTool } from "@renderer/lib/ai/gemini";
-import { SquareCode, Server, Send, Binoculars, Plus, Loader2Icon, Newspaper, Scissors } from "lucide-react";
+import { SquareCode, Server, Send, Binoculars, Plus, Loader2Icon, Newspaper, Scissors, Activity } from "lucide-react";
 import { forwardRef, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSubmitHandler } from "@renderer/lib/hooks/shouldSubmit";
 import { uiState } from "@renderer/lib/state/uistate";
@@ -17,7 +17,7 @@ import { editMcpServer, getAllMcpServers } from "@renderer/lib/data/db";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "../ui/dialog";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "../ui/input";
-import { isYoutubeURI, screenShotCallback, startScrenShot } from "@renderer/lib/util/misc";
+import { isYoutubeURI, screenShotCallback, showLiveWindow, startScrenShot } from "@renderer/lib/util/misc";
 import { useTranslation } from "react-i18next";
 import { checkToolAvialable } from "@renderer/lib/util/model";
 import { GeminiToolType } from "@shared/types/session";
@@ -191,10 +191,12 @@ export default function SendBox() {
                     </div>
                     <div className="inline-flex items-center justify-end my-0">
                         <Button
-                            className=" rounded-xs bg-blue-600/80 hover:bg-blue-700 w-12 h-5 px-0.5 gap-0.5 text-white text-xs"
-                            disabled={messageText.length === 0 && messageCancel.get(currentSessionID) === undefined}
+                            className=" rounded-sm bg-blue-600/80 hover:bg-blue-700 w-12 h-5 px-0.5 gap-0.5 text-white text-xs"
+                            // disabled={messageText.length === 0 && messageCancel.get(currentSessionID) === undefined}
                             onClick={() => {
-                                if (messageCancel.get(currentSessionID) === undefined) {
+                                if (messageText.length === 0 && messageCancel.get(currentSessionID) === undefined) {
+                                    showLiveWindow();
+                                } else if (messageCancel.get(currentSessionID) === undefined) {
                                     sendMessageAction();
                                 } else {
                                     const cancel = messageCancel.get(currentSessionID);
@@ -204,11 +206,18 @@ export default function SendBox() {
                                 }
                             }}
                         >
-                            {messageCancel.get(currentSessionID) === undefined ?
-                                t("send") : t("stop")}
-                            {messageCancel.get(currentSessionID) === undefined ?
-                                <Send /> :
-                                <Loader2Icon className="animate-spin" />}
+                            {
+                                messageText.length === 0 && messageCancel.get(currentSessionID) === undefined ?
+                                    t("live") :
+                                    messageCancel.get(currentSessionID) === undefined ?
+                                        t("send") : t("stop")
+                            }
+                            {
+                                messageText.length === 0 && messageCancel.get(currentSessionID) === undefined ?
+                                    <Activity /> :
+                                    messageCancel.get(currentSessionID) === undefined ?
+                                        <Send /> :
+                                        <Loader2Icon className="animate-spin" />}
 
                         </Button>
                     </div>

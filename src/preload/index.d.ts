@@ -32,6 +32,7 @@ declare global {
       changeLang: (lang: string) => Promise<void>,
       startScrenShot: () => void,
       screenShotCallback: (callback: (data: string) => void) => unknown,
+      openLiveWindow: () => void,
     }
     quick: {
       setIgnoreMouse: (ignore: boolean) => void,

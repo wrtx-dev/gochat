@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer, shell, webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { cmdListMcpTools, cmdRunMcpTool, cmdStartMcpServer, cmdStartMcpServers, cmdStopMcpServer, cmdStopMcpServers, mcpServerInfo } from '@shared/types/mcp';
 import { FunctionCall } from '@google/genai';
-import { cmdBlur, cmdChangeAppLang, cmdCreateAppTray, cmdCreateQuickWindow, cmdDestroyAppTray, cmdDestroyQuickWindow, cmdGlobalNotifyConfChanged, cmdHideQuickWin, cmdRecalcShadow, cmdResizeWindow, cmdSaveImage, cmdScreenShot, cmdScreenShotResponse, cmdSetQuickWinIgnoreMouse } from '@shared/types/cmd';
+import { cmdBlur, cmdChangeAppLang, cmdCreateAppTray, cmdCreateQuickWindow, cmdDestroyAppTray, cmdDestroyQuickWindow, cmdGlobalNotifyConfChanged, cmdHideQuickWin, cmdOpenLiveWindow, cmdRecalcShadow, cmdResizeWindow, cmdSaveImage, cmdScreenShot, cmdScreenShotResponse, cmdSetQuickWinIgnoreMouse } from '@shared/types/cmd';
 import { EnumQuickWinHotKey } from '@shared/types/config';
 
 // Custom APIs for renderer
@@ -35,7 +35,8 @@ const api = {
   startScrenShot: () => ipcRenderer.send(cmdScreenShot),
   screenShotCallback: (callback: (data: string) => void) => ipcRenderer.on(cmdScreenShotResponse, (_event, data: string) => {
     callback(data);
-  })
+  }),
+  openLiveWindow: () => ipcRenderer.send(cmdOpenLiveWindow),
 }
 
 const quickApi = {

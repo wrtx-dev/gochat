@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { listTools, runTool, startMcpServer, startMcpServers, stopMcpServer, stopMcpServers } from "./mcpservice";
 import { mcpServerInfo } from "@shared/types/mcp";
 import { FunctionCall } from "@google/genai";
-import { cmdChangeAppLang, cmdCreateAppTray, cmdCreateQuickWindow, cmdDestroyAppTray, cmdDestroyQuickWindow, cmdGlobalNotifyConfChanged, cmdHideQuickWin, cmdRecalcShadow, cmdResizeWindow, cmdSaveImage, cmdScreenShot, cmdScreenShotResponse, cmdSetQuickWinIgnoreMouse } from "@shared/types/cmd";
+import { cmdChangeAppLang, cmdCreateAppTray, cmdCreateQuickWindow, cmdDestroyAppTray, cmdDestroyQuickWindow, cmdGlobalNotifyConfChanged, cmdHideQuickWin, cmdOpenLiveWindow, cmdRecalcShadow, cmdResizeWindow, cmdSaveImage, cmdScreenShot, cmdScreenShotResponse, cmdSetQuickWinIgnoreMouse } from "@shared/types/cmd";
 import { saveImage } from "./saveFile";
 import { deleteAppicationMenu, setupApplicationMenu } from "./appMenu";
 import { changeTrayLang, createTray, destroyTray } from "./tray";
@@ -13,6 +13,7 @@ import { createQuickWindowWithGlobalShortCut, destroyQuickWindow, hideQuickWindo
 import { EnumQuickWinHotKey } from "@shared/types/config";
 import Screenshot from "electron-screenshots";
 import { join } from "path";
+import { showLiveWindow } from "./liveWindow";
 
 
 
@@ -178,7 +179,12 @@ export const ipcInit = () => {
             }
             return undefined;
         });
-    })
+    });
+
+    ipcMain.on(cmdOpenLiveWindow, async () => {
+        showLiveWindow();
+    });
+
 
 }
 

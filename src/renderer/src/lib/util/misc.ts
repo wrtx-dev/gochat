@@ -150,3 +150,7 @@ export function getYouTubeThumbnails(url: string): {
 export async function saveFileDialog(data: string) {
     await window.api.saveFile(data);
 }
+
+export const showLiveWindow = async () => {
+    await window.api.openLiveWindow();
+}

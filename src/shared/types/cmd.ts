@@ -14,3 +14,5 @@ export const cmdChangeAppLang = "app:change-lang";
 
 export const cmdScreenShot = "app:screen-shot";
 export const cmdScreenShotResponse = "app:screen-shot-return";
+
+export const cmdOpenLiveWindow = "live:open-window";
