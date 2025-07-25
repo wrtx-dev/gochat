@@ -29,17 +29,18 @@ export default function MessageInputBox() {
                         className="flex -1w-full min-h-5 max-h-24 text-xs resize-none border-none shadow-none outline-0 focus-visible:border-none focus-visible:outline-0 focus-visible:shadow-none focus-visible:ring-0 py-1 px-1.5"
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
+                    />
+                    <Button
+                        className=" rounded-sm bg-blue-600/80 hover:bg-blue-700 gap-0.5 text-white"
                         onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
                             if (messageText.length > 0) {
-                                geminiLiveSendMessage(messageText);
+                                const msg = messageText;
                                 setMessageText("");
+                                geminiLiveSendMessage(msg);
                             }
                         }}
-                    />
-                    <Button
-                        className=" rounded-sm bg-blue-600/80 hover:bg-blue-700 gap-0.5 text-white"
                     >
                         send
                         <SendHorizonal strokeWidth={1} className="size-4" />

@@ -25,3 +25,17 @@ export interface FileInfo {
 }
 
 export type MessageCancelFn = undefined | (() => void);
+
+export type AudioPart = {
+    data?: string,
+    mimeType?: string,
+}
+
+export type LiveMessage = {
+    role: "user" | "model",
+    text?: string,
+    audio?: AudioPart,
+    complete?: boolean,
+    dataurl?: string,
+    played?: boolean,
+}
