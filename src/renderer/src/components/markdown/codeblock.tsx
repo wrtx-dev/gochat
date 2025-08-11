@@ -14,7 +14,8 @@ interface CodeBlockProps {
 const SYNTAX_HIGHLIGHTER_STYLE = {
     margin: 0,
     width: "100%",
-    background: "transparent"
+    background: "transparent",
+    whiteSpace: "pre-wrap"
 };
 
 const CODE_STYLE = {
@@ -34,6 +35,7 @@ const CodeBlockComponent: FC<CodeBlockProps> = ({ language, value }) => {
                 wrapLines
                 customStyle={SYNTAX_HIGHLIGHTER_STYLE}
                 codeTagProps={{ style: CODE_STYLE }}
+                lineProps={{ style: { whiteSpace: 'pre-wrap', wordBreak: 'break-all' } }}
             >
                 {value}
             </SyntaxHighlighter>
