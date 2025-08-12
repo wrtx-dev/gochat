@@ -90,11 +90,11 @@ export class GeminiClient {
         }
     }
 
-    private async saveModelRawMessage(v: Candidate) {
+    private async saveModelRawMessage(v: Candidate, sessionID: string) {
         const modelMessage: rawMessage = {
             content: v.content,
             groundMetadata: v.groundingMetadata,
-            sessionID: this.sessionState!.sessionID,
+            sessionID: sessionID,
             role: "model"
         }
         if (!this.tmpSession) {
@@ -133,7 +133,7 @@ export class GeminiClient {
                         funcs = [...funcs, ...fcall]
                     }
                     if (!this.tmpSession) {
-                        await this.saveModelRawMessage(v);
+                        await this.saveModelRawMessage(v, sessionID);
                     }
                     if (v.finishReason && v.finishReason !== FinishReason.STOP) {
                         throw new Error("unnormal finished reason: " + v.finishReason);

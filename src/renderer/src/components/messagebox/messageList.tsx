@@ -63,7 +63,7 @@ export default function MessageList() {
                     }
                     if (msg.isError) {
                         newMsg.isError = msg.isError;
-                        if (msg.errInfo.length > 0 && newMsg.errInfo.length === 0) {
+                        if (msg.errInfo.length > 0 && (!newMsg.errInfo || newMsg.errInfo.length === 0)) {
                             newMsg.errInfo = msg.errInfo;
                         }
                     }
@@ -245,8 +245,8 @@ const AssistentMessage = memo(({ msg, finished, ...props }: { msg: Message, fini
     }
     return (
         <div className="flex flex-col w-full mt-2 px-2 text-gray-600" {...props}>
-            {msg.thinking && <ThoughtBlock thought={msg.thinking} thinking={msg.message.length < 1 && !msg.isError && !msg.finished} />}
-            {msg.message.length > 0 &&
+            {(msg.thinking && msg.message) && <ThoughtBlock thought={msg.thinking} thinking={msg.message.length < 1 && !msg.isError && !msg.finished} />}
+            {(msg.message && msg.message.length > 0) &&
                 <div className="flex flex-col w-full" ref={msgRef}>
                     <ContextMenu>
                         <ContextMenuTrigger>
