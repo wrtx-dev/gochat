@@ -159,5 +159,11 @@
     "preview": "预览",
     "copy": "复制"
   },
-  "moreInfo": "更多信息请访问 AI.wrtx.dev"
+  "moreInfo": "更多信息请访问 AI.wrtx.dev",
+  "conf": {
+    "addApikey": "添加ApiKey",
+    "addApikeyfirst": "请先添加ApiKey",
+    "apiBalance": "ApiKey轮询模式",
+    "editApi": "编辑ApiKey"
+  }
 }

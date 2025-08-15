@@ -14,6 +14,7 @@ import i18n from "@renderer/locales/i18n";
 import { mcpServersState } from "./lib/state/mcpState";
 import { Toaster } from "react-hot-toast";
 import { MessageCancelFn } from "@shared/types/message";
+import { fetchHooker } from "./lib/hooks/hookFetch";
 
 function App({ config }: { config: Config | null }) {
   const conf = globalConfig((state) => state.config);
@@ -28,7 +29,9 @@ function App({ config }: { config: Config | null }) {
   const setMcpServers = mcpServersState((state) => state.setMcpServers);
   const addMessageCancel = uiState(state => state.addMessageCancel);
   const deleteMessageCancel = uiState(state => state.deleteMessageCancel);
+  const { enableHookFetch } = fetchHooker();
   const init = useCallback(async (conf: Config) => {
+    enableHookFetch(conf.balance ?? false);
     setCurrentModel(conf.defaultModel);
     geminiInit(conf);
     registerSetCurrentSessionID(setCurrentSessionID);
@@ -72,7 +75,7 @@ function App({ config }: { config: Config | null }) {
       // console.log("system lang:", lang);
       await i18n.changeLanguage(lang);
 
-      if (config && config.apikey !== "") {
+      if (config && config.apikeys && config.apikeys.length > 0) {
         await init(config);
       }
     })();

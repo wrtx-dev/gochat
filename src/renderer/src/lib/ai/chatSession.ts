@@ -135,7 +135,10 @@ export class ChatSession {
         if (this.chatSession) {
             return this.chatSession.sendMessageStream({
                 message: message,
-                config: { ...this.chatConfig, abortSignal: abortSignal ? abortSignal.signal : undefined },
+                config: {
+                    ...this.chatConfig,
+                    abortSignal: abortSignal ? abortSignal.signal : undefined
+                },
             });
         }
         return undefined;

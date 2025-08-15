@@ -32,7 +32,7 @@ export class SessionTitleService {
             return;
         }
         let c = new GoogleGenAI({
-            apiKey: conf.apikey,
+            apiKey: conf.balance ? conf.balanceApikeys![0].key : conf.ApiKeyInuse!.key,
 
         });
         let s = c.chats.create({

@@ -21,6 +21,7 @@ import { changeAppLang, createAppTray, createQuickWindow, destroyQuickWindow, de
 import { changeLanguage } from "i18next";
 import { EnumQuickWinHotKey, EnumQuickWinHotKeyToString } from "@shared/types/config";
 import { uiState } from "@renderer/lib/state/uistate";
+import ApikeyControllor from "./apiControllor";
 
 const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>) => {
     const setGlobalConfig = globalConfig((state) => state.setConfig);
@@ -60,7 +61,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
     ));
 
     const refleshModels = async () => {
-        if (conf.apikey !== "") {
+        if (conf.apikeys && conf.apikeys.length > 0) {
             const modelList = await getModels(conf);
             setModels(modelList);
             if (modelList.length > 0) {
@@ -121,6 +122,29 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
             </div>
             <div className="setting-item-row">
                 <span className="setting-item-label">{t("apiKey")}</span>
+                <div className="col-span-6">
+                    <ApikeyControllor
+                        apikeys={conf.apikeys}
+                        banceKeys={conf.balanceApikeys}
+                        balance={conf.balance}
+                        currentInuse={conf.ApiKeyInuse}
+                        onApikeyChange={(info, banceKeys, balance, useApikey) => {
+                            setConf(prev => {
+                                const oldkey = prev.ApiKeyInuse;
+                                const newKeys: Config = {
+                                    ...prev,
+                                    apikeys: info,
+                                    balanceApikeys: banceKeys,
+                                    balance: balance,
+                                    ApiKeyInuse: useApikey ? useApikey : oldkey,
+                                }
+                                return newKeys;
+                            });
+                        }} />
+                </div>
+            </div>
+            {/* <div className="setting-item-row">
+                <span className="setting-item-label">{t("apiKey")}</span>
                 <Input className="col-span-6 input-comm"
                     value={conf.apikey}
                     onChange={(e) => setConf((prev) => ({
@@ -137,8 +161,8 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         }
                     }}
                 />
-            </div>
-            <div className="setting-item-row">
+            </div> */}
+            {/* <div className="setting-item-row">
                 <span className="setting-item-label">{t("provider")}</span>
                 <Input className="col-span-6 input-comm" value={conf.provider || ""} onChange={(e) => setConf((prev) => ({
                     ...prev,
@@ -151,7 +175,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                     ...prev,
                     endPoint: e.target.value
                 }))} />
-            </div>
+            </div> */}
             <div className="setting-item-row">
                 <span className="setting-item-label">{t("roleSettings")}</span>
                 <Textarea className="col-span-6 textarea-comm" value={conf.systemInstruction} onChange={(e) => setConf((prev) => ({
@@ -185,7 +209,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                     </Select>
                     <Button
                         variant="outline"
-                        disabled={conf.apikey.length === 0}
+                        disabled={conf.apikeys === undefined || conf.apikeys.length === 0}
                         size="sm"
                         onClick={() => {
                             refleshModels();

@@ -7,7 +7,7 @@ export interface modelSimpleInfo {
 }
 export async function getModels(conf: Config) {
     const url = new URL(conf.endPoint && conf.endPoint !== "" ? `${conf.endPoint}v1beta/models` : "https://generativelanguage.googleapis.com/v1beta/models");
-    url.searchParams.append('key', conf.apikey);
+    url.searchParams.append('key', conf.apikeys![0].key);
     url.searchParams.append('pageSize', "500")
     try {
         const response = await fetch(url.toString(), {

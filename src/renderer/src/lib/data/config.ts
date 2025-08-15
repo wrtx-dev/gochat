@@ -25,11 +25,16 @@ export const EnumMessageSendKeyToString = (i: EnumMessageSendKey) => {
     return MessageSendKeyString[i]
 }
 
+export type ApikeyInfo = {
+    key: string,
+    provider?: string,
+    endPoint?: string,
+}
+
 
 export interface Config {
     id?: number,
     lastModified?: number,
-    apikey: string,
     endPoint?: string,
     systemInstruction?: string,
     default?: boolean,
@@ -60,6 +65,10 @@ export interface Config {
     quickWinHotkey: EnumQuickWinHotKey,
     autoDelteSession?: boolean,
     autoDeleteSessionCutoff?: number,
+    balance?: boolean,
+    apikeys?: ApikeyInfo[],
+    balanceApikeys?: ApikeyInfo[],
+    ApiKeyInuse?: ApikeyInfo,
 }
 
 export enum historySessionModel {
@@ -81,7 +90,6 @@ export function historySessionModeltoString(v: historySessionModel) {
 }
 export function newConfigDefault() {
     const conf: Config = {
-        apikey: "",
         uuid: "",
         defaultModel: "models/gemini-2.5-flash",
         temprature: 0,
@@ -107,7 +115,7 @@ export function newConfigDefault() {
 }
 
 export async function saveConfig(conf: Config) {
-    if (conf.apikey !== "") {
+    if (conf.apikeys && conf.apikeys.length > 0) {
         const confData = JSON.stringify(conf);
         localStorage.setItem("gemini_config", confData);
     }

@@ -44,9 +44,9 @@ export class GeminiClient {
     constructor(conf: Config, tmp: boolean) {
         this.conf = conf;
         this.client = new GoogleGenAI({
-            apiKey: conf.apikey
+            apiKey: conf.balance ? conf.balanceApikeys![0].key : conf.ApiKeyInuse!.key,
         });
-        this.apiKey = conf.apikey;
+        this.apiKey = conf.balance ? conf.balanceApikeys![0].key : conf.ApiKeyInuse!.key;
         this.tmpSession = tmp;
         this.newSession();
 

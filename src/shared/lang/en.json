@@ -137,6 +137,12 @@
     "autoDelteSession": "Auto delete session, session retention",
     "days": "days"
   },
+  "conf": {
+    "addApikey": "Add ApiKey",
+    "addApikeyfirst": "Please add ApiKey first",
+    "apiBalance": "ApiKey polling mode",
+    "editApi": "Edit ApiKey"
+  },
   "app": {
     "about": "About",
     "aboutTitle": "Cross-platform AI assistant based on Gemini API",

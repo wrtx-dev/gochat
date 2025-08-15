@@ -137,6 +137,12 @@
     "autoDelteSession": "세션 자동 삭제, 세션 보존",
     "days": "일"
   },
+  "conf": {
+    "addApikey": "API 키 추가",
+    "addApikeyfirst": "먼저 API 키를 추가하세요",
+    "apiBalance": "API 키 폴링 모드",
+    "editApi": "API 키 편집"
+  },
   "app": {
     "about": "GoChat 정보",
     "aboutTitle": "Gemini API 기반의 크로스 플랫폼 AI 어시스턴트",

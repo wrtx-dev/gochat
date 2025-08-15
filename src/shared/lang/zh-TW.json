@@ -130,6 +130,12 @@
         "autoDelteSession": "自動刪除會話，會話保留",
         "days": "天"
     },
+    "conf": {
+        "addApikey": "添加API密鑰",
+        "addApikeyfirst": "請先添加API密鑰",
+        "apiBalance": "API密鑰輪詢模式",
+        "editApi": "編輯API密鑰"
+    },
     "quote": "引用",
     "exportMD": "導出markdown",
     "send": "發送",

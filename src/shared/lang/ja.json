@@ -137,6 +137,12 @@
     "autoDelteSession": "セッションを自動削除、セッション保持",
     "days": "日"
   },
+  "conf": {
+    "addApikey": "APIキーを追加",
+    "addApikeyfirst": "最初にAPIキーを追加してください",
+    "apiBalance": "APIキーポーリングモード",
+    "editApi": "APIキーを編集"
+  },
   "app": {
     "about": "GoChatについて",
     "aboutTitle": "Gemini APIベースのクロスプラットフォームAIアシスタント",
