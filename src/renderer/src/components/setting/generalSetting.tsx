@@ -66,6 +66,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
             setModels(modelList);
             if (modelList.length > 0) {
                 saveModelsList(modelList);
+                setGlobalModels(modelList);
             }
         }
     };

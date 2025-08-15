@@ -28,7 +28,7 @@ function createWindow(): void {
     }
   })
 
-  if (!app.requestSingleInstanceLock()) {
+  if (!app.requestSingleInstanceLock() && !is.dev) {
     app.exit(0);
   }
 

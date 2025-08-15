@@ -8,6 +8,9 @@ import { Checkbox } from "../ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { KeySquare, Link2, Cloud, SquarePen, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { getModels } from "@renderer/lib/util/model";
+import { globalConfig } from "@renderer/lib/state/confState";
+import { uiState } from "@renderer/lib/state/uistate";
 
 
 export default function ApikeyControllor({ apikeys, balance, currentInuse, banceKeys, onApikeyChange }: { apikeys?: ApikeyInfo[], currentInuse?: ApikeyInfo, banceKeys?: ApikeyInfo[], balance?: boolean, onApikeyChange: (info: ApikeyInfo[], banceKeys: ApikeyInfo[], balance: boolean, useApikey?: ApikeyInfo) => void }) {
@@ -22,6 +25,9 @@ export default function ApikeyControllor({ apikeys, balance, currentInuse, bance
     const [editApikey, setEditApikey] = useState<ApikeyInfo | undefined>(undefined);
     const [editIdx, setEditIdx] = useState(-1);
     const [openEditor, setOpenEditor] = useState(false);
+    const conf = globalConfig(config => config.config);
+    const models = uiState(state => state.models);
+    const setGlobalModels = uiState(state => state.setModels);
     const { t } = useTranslation();
     return (
         <div className="w-full inline-flex flex-row gap-2">
@@ -261,6 +267,14 @@ export default function ApikeyControllor({ apikeys, balance, currentInuse, bance
                                     onApikeyChange(newKeys, _balanceKeys, apiBalance);
                                     return newKeys;
                                 });
+                                setTimeout(async () => {
+                                    if (conf) {
+                                        const modelList = await getModels(conf);
+                                        if (!models || models.length === 0) {
+                                            setGlobalModels(modelList);
+                                        }
+                                    }
+                                })
                             }}
                         >
                             {t("add")}
