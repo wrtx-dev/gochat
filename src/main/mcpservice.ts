@@ -60,7 +60,7 @@ export class McpClients {
                         this.clientMap.set(server.uuid, { client, transport, server })
                     }
                     break;
-                case "http stream":
+                case "httpstream":
                     {
                         const transport = new StreamableHTTPClientTransport(new URL(server.url));
                         this.clientMap.set(server.uuid, { client, transport, server })
@@ -154,8 +154,7 @@ export class McpClients {
 
     private async startClient() {
         let count = 0;
-        for (const [key, client] of this.clientMap) {
-            console.log("start client:", key);
+        for (const [_key, client] of this.clientMap) {
             if (!client.server.enabledDefault) {
                 continue;
             }
@@ -231,7 +230,7 @@ export class McpClients {
                     this.clientMap.set(server.uuid, clientItem!);
                 }
                 break;
-            case "http stream":
+            case "httpstream":
                 {
                     const transport = new StreamableHTTPClientTransport(new URL(server.url));
                     clientItem = { client, transport, server };

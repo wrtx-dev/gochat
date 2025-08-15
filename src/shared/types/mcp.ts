@@ -4,7 +4,7 @@ export interface mcpServerInfo {
     description: string
     cmd: string
     uuid: string
-    type: "stdio" | "sse" | "http stream"
+    type: "stdio" | "sse" | "httpstream"
     env: string
     enabledDefault: boolean
     url: string
