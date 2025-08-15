@@ -17,7 +17,6 @@ export const fetchHooker = () => {
                 const currentApiKey = conf.balanceApikeys[currentIndex];
                 headers.delete("x-goog-api-key");
                 headers.set("x-goog-api-key", currentApiKey.key);
-                console.log("use api key:", currentApiKey.key, "current index:", currentIndex);
                 if (currentApiKey.endPoint && typeof input === "string") {
                     const url = new URL(input);
                     url.hostname = currentApiKey.endPoint || url.hostname;

@@ -35,11 +35,13 @@ export default function ApikeyControllor({ apikeys, balance, currentInuse, bance
                 <PopoverContent className="min-w-(--radix-popover-trigger-width) py-1 px-1.5">
                     <span
                         className="inline-flex flex-row justify-start items-center gap-2 w-full hover:bg-neutral-400/20 p-1.5 rounded-sm"
-                        onClickCapture={() => {
-                            setApiBalance(prev => {
-                                onApikeyChange(keys, _balanceKeys, !prev);
-                                return !prev;
-                            })
+                        onClick={() => {
+                            setTimeout(() => {
+                                setApiBalance(prev => {
+                                    onApikeyChange(keys, _balanceKeys, !prev);
+                                    return !prev;
+                                });
+                            }, 0);
                         }}
                     >
                         <Checkbox checked={apiBalance} />
@@ -63,9 +65,11 @@ export default function ApikeyControllor({ apikeys, balance, currentInuse, bance
                                     >
                                         <div
                                             className="inline-flex flex-row w-[90%] gap-1 border-r"
-                                            onClickCapture={() => {
-                                                setApikeyInuse(k);
-                                                onApikeyChange(keys, _balanceKeys, apiBalance, k);
+                                            onClick={() => {
+                                                setTimeout(() => {
+                                                    setApikeyInuse(k);
+                                                    onApikeyChange(keys, _balanceKeys, apiBalance, k);
+                                                }, 0);
                                             }}
                                         >
                                             <RadioGroupItem
@@ -133,20 +137,22 @@ export default function ApikeyControllor({ apikeys, balance, currentInuse, bance
                                     >
                                         <div
                                             className="inline-flex flex-row w-[90%] gap-1 border-r"
-                                            onClickCapture={() => {
-                                                if (_balanceKeys.includes(k)) {
-                                                    set_BalanceKeys(prev => {
-                                                        const newKeys = prev.filter(v => v.key !== k.key || v.endPoint !== k.endPoint || v.provider !== k.provider);
-                                                        onApikeyChange(keys, newKeys, apiBalance, apikeyInuse);
-                                                        return newKeys;
-                                                    })
-                                                } else {
-                                                    set_BalanceKeys(prev => {
-                                                        const newKeys = [...prev, k];
-                                                        onApikeyChange(keys, newKeys, apiBalance);
-                                                        return newKeys;
-                                                    })
-                                                }
+                                            onClick={() => {
+                                                setTimeout(() => {
+                                                    if (_balanceKeys.includes(k)) {
+                                                        set_BalanceKeys(prev => {
+                                                            const newKeys = prev.filter(v => v.key !== k.key || v.endPoint !== k.endPoint || v.provider !== k.provider);
+                                                            onApikeyChange(keys, newKeys, apiBalance, apikeyInuse);
+                                                            return newKeys;
+                                                        })
+                                                    } else {
+                                                        set_BalanceKeys(prev => {
+                                                            const newKeys = [...prev, k];
+                                                            onApikeyChange(keys, newKeys, apiBalance);
+                                                            return newKeys;
+                                                        })
+                                                    }
+                                                }, 0);
                                             }}
                                         >
                                             <Checkbox
