@@ -20,23 +20,23 @@ export default function SearchBar() {
     const setIgnoreCase = searchState(state => state.setIgnoreCase);
     const { t } = useTranslation();
 
-    useEffect(() => {
-        CSS.highlights.clear();
-        if (searchRange && searchRange.length > 0) {
-            const allHighlight = new Highlight(...searchRange);
-            CSS.highlights.set("search-matches", allHighlight);
-            if (currentIndex > -1 && searchRange[currentIndex]) {
-                const p = searchRange[currentIndex].startContainer.parentElement;
-                const hightlight = new Highlight(searchRange[currentIndex]);
-                CSS.highlights.set("current-match", hightlight);
-                p?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'nearest'
-                })
-            }
-        }
-    }, [searchRange, currentIndex])
+    // useEffect(() => {
+    //     CSS.highlights.clear();
+    //     if (searchRange && searchRange.length > 0) {
+    //         const allHighlight = new Highlight(...searchRange);
+    //         CSS.highlights.set("search-matches", allHighlight);
+    //         if (currentIndex > -1 && searchRange[currentIndex]) {
+    //             const p = searchRange[currentIndex].startContainer.parentElement;
+    //             const hightlight = new Highlight(searchRange[currentIndex]);
+    //             CSS.highlights.set("current-match", hightlight);
+    //             p?.scrollIntoView({
+    //                 behavior: 'smooth',
+    //                 block: 'center',
+    //                 inline: 'nearest'
+    //             })
+    //         }
+    //     }
+    // }, [searchRange, currentIndex])
     return (
         <div className={`flex flex-row py-1 items-center w-full h-8 px-2 gap-2 bg-neutral-200/50 ${!show && "hidden"}`}>
             <Label
