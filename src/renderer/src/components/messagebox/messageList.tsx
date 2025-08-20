@@ -11,11 +11,10 @@ import { useTranslation } from "react-i18next";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";
 import { saveFileDialog } from "@renderer/lib/util/misc";
 import { searchState } from "@renderer/lib/state/searchState";
+import { Virtuoso } from "react-virtuoso";
 
 export default function MessageList() {
     const [messages, setMessages] = useState<Message[]>([]);
-    const lastUserMsgRef = useRef<HTMLDivElement>(null);
-    const lastAssistantMsgRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const currentSessionID = uiState((state) => state.currentSessionID);
     const messageCanncel = uiState(state => state.messageCancel);
@@ -76,7 +75,6 @@ export default function MessageList() {
         });
         registerClearMessages(() => {
             setMessages([]);
-            setSpaceHeight(0);
         });
         registerLoadMessageList((messages: Message[], id: string) => {
             if (id !== currentSessionID) {
@@ -117,31 +115,6 @@ export default function MessageList() {
         }
     }, [storeSessionID]);
 
-    const [spaceHeight, setSpaceHeight] = useState(0);
-    const adjustSpaceHeight = useCallback(() => {
-        if (messages.length > 0 && containerRef.current) {
-            if (messages[messages.length - 1].role === "user" && lastUserMsgRef.current) {
-                const newHeight = containerRef.current.clientHeight - lastUserMsgRef.current.clientHeight;
-                setSpaceHeight(newHeight > 0 ? newHeight : 0);
-                requestAnimationFrame(() => {
-                    if (lastUserMsgRef.current) {
-                        lastUserMsgRef.current.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                            inline: "nearest"
-                        });
-                    }
-                });
-            } else if (messages[messages.length - 1].role !== "user" && lastAssistantMsgRef.current && spaceHeight > 0) {
-                const newHeight = containerRef.current.clientHeight - lastAssistantMsgRef.current.clientHeight;
-                setSpaceHeight(newHeight > 0 ? newHeight : 0);
-            }
-        }
-    }, [messages, lastAssistantMsgRef, lastUserMsgRef]);
-
-    useLayoutEffect(() => {
-        adjustSpaceHeight();
-    }, [messages, adjustSpaceHeight]);
 
     const query = searchState(state => state.query);
     const setSearchRange = searchState(state => state.setSearchRange);
@@ -208,20 +181,50 @@ export default function MessageList() {
     return (
         <div className="flex flex-col w-full h-full overflow-x-hidden overflow-y-auto flex-1 min-h-0 bg-white pb-2" ref={containerRef}>
 
-            {messages.map((msg, idx) => {
-                const userLast = msg.role === "user" && (idx === messages.length - 1);
-                const assistantLast = msg.role !== "user" && idx === messages.length - 1;
-                return (
+            <Virtuoso
+                style={{ height: "100%", width: "100%" }}
+                data={messages}
+                overscan={2}
+                increaseViewportBy={{ top: 100, bottom: 100 }}
+                followOutput={() => {
+                    console.log(`messages.length > 0 && messages[messages.length - 1].role !== "user" && !messages[messages.length - 1].finished`, messages.length > 0 && messages[messages.length - 1].role !== "user" && !messages[messages.length - 1].finished)
+                    return messages.length > 0 && messages[messages.length - 1].role !== "user" && !messages[messages.length - 1].finished;
+                }}
+                components={{
+                    Footer: () => {
+                        return (
+                            <>
+                                {messageCanncel.get(currentSessionID) !== undefined && <WaitAssistantMessage />}
+                                <div className="w-full flex-1" />
+                            </>
+                        )
+                    }
+                }}
+                itemContent={(_, msg) => {
+                    return (
 
-                    <div key={msg.id} className={`px-1 ${msg.role === "user" ? "w-full inline-flex flex-row-reverse" : "w-full"}`}
-                        ref={userLast ? lastUserMsgRef : assistantLast ? lastAssistantMsgRef : null}>
-                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
-                    </div>
+                        <div key={msg.id} className={`px-1 ${msg.role === "user" ? "w-full inline-flex flex-row-reverse" : "w-full"}`}
 
-                )
-            })}
-            {messageCanncel.get(currentSessionID) !== undefined && <WaitAssistantMessage />}
-            <div className="w-full" style={{ minHeight: `${spaceHeight}px` }} />
+                        >
+                            {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                        </div>
+
+                    )
+                }}
+            />
+            {/* {messages.map((msg, idx) => {
+                    const userLast = msg.role === "user" && (idx === messages.length - 1);
+                    const assistantLast = msg.role !== "user" && idx === messages.length - 1;
+                    return (
+
+                        <div key={msg.id} className={`px-1 ${msg.role === "user" ? "w-full inline-flex flex-row-reverse" : "w-full"}`}
+                            ref={userLast ? lastUserMsgRef : assistantLast ? lastAssistantMsgRef : null}>
+                            {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                        </div>
+
+                    )
+                })} */}
+
         </div>
     )
 }
@@ -244,7 +247,7 @@ const AssistentMessage = memo(({ msg, finished, ...props }: { msg: Message, fini
         return msg.message;
     }
     return (
-        <div className="flex flex-col w-full mt-2 px-2 text-gray-600" {...props}>
+        <div className="flex flex-col w-full mt-2 min-h-0.5 px-2 text-gray-600" {...props}>
             {(msg.thinking && msg.message) && <ThoughtBlock thought={msg.thinking} thinking={msg.message.length < 1 && !msg.isError && !msg.finished} />}
             {(msg.message && msg.message.length > 0) &&
                 <div className="flex flex-col w-full" ref={msgRef}>
@@ -366,7 +369,7 @@ const UserMessage = memo(({ msg }: { msg: Message }) => {
         return msg.message;
     }
     return (
-        <div className="inline-block max-w-2/3 break-all overflow-hidden">
+        <div className="inline-block max-w-2/3 break-all overflow-hidden min-h-0.5">
             <div className="flex flex-col mt-2 px-2 max-w-full bg-neutral-200/50 items-center justify-center rounded-sm" ref={msgRef}>
                 <ContextMenu>
                     <ContextMenuTrigger>
