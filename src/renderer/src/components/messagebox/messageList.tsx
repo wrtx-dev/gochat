@@ -97,11 +97,16 @@ export default function MessageList() {
     }, []);
     useLayoutEffect(() => {
         if (loaded) {
+
             requestAnimationFrame(() => {
-                containerRef.current?.scrollTo({
-                    top: containerRef.current?.scrollHeight,
-                    behavior: "instant"
-                });
+                if (msgListRef && msgListRef.current) {
+                    console.log("request to scroll")
+                    msgListRef.current.scrollToIndex({
+                        align: "end",
+                        index: "LAST",
+                    });
+                }
+
             });
 
             setLoaded(false);
@@ -197,21 +202,36 @@ export default function MessageList() {
 
             </div>
         )
-    }, [query, ignoreCase, currentIndex])
+    }, [query, ignoreCase, currentIndex]);
+
+    // const followOutput = useCallback((isBottom: boolean) => {
+    //     if (!isBottom) {
+    //         console.log("followOutput:", messages.length > 0 && messages[messages.length - 1].role === "user")
+    //         return messages.length > 2 && messages[messages.length - 1].role === "user";
+    //     }
+    //     console.log("followOutput2:", false);
+    //     return false;
+
+    // }, [messages.length])
+    useLayoutEffect(() => {
+        if (msgListRef && msgListRef.current && messages && messages.length > 2 && messages[messages.length - 1].role === "user") {
+            msgListRef.current.scrollToIndex({
+                align: "end",
+                index: messages.length - 1,
+                behavior: "smooth"
+            });
+        }
+    }, [messages])
 
     return (
         <div className="flex flex-col w-full h-full overflow-x-hidden overflow-y-auto flex-1 min-h-0 bg-white pb-2" ref={containerRef}>
 
             <Virtuoso
                 ref={msgListRef}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: "100%", width: "100%", scrollbarGutter: "stable" }}
                 data={messages}
-                overscan={2}
-                increaseViewportBy={{ top: 100, bottom: 100 }}
-                followOutput={() => {
-                    return messages.length > 0 && messages[messages.length - 1].role === "user";
-                }}
-                // useWindowScroll={query !== undefined && query.length > 0}
+                overscan={4}
+                increaseViewportBy={{ top: 1000, bottom: 1000 }}
                 components={{
                     Footer: () => {
                         return (
