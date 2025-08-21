@@ -1,7 +1,7 @@
 import { session } from "@shared/types/session";
 import { uiState } from "@renderer/lib/state/uistate";
 import { newSession, registerFleshSessionList, updateSessionTitle } from "@renderer/lib/ai/gemini";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { deleteSession, getAllSessions } from "@renderer/lib/data/db";
 import SessionItemContextMenu, { SessionProps } from "@renderer/components/sider/sessionContextMenu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -10,6 +10,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useTranslation } from "react-i18next";
 import { formatTimestamp } from "@renderer/lib/util/misc";
+import { Virtuoso } from "react-virtuoso";
 
 
 
@@ -18,7 +19,7 @@ const SessionListView = ({ hideSider, onChangeSession, sessions, currentSession,
     const [contextMenu, setContextMenu] = useState<SessionProps | null>(null);
     const handleContextMenu = (item: session) => {
         return (event: React.MouseEvent<HTMLLIElement>) => {
-            event.preventDefault(); // 阻止默认的浏览器右键菜单
+            event.preventDefault();
 
             setContextMenu({
                 x: event.clientX,
@@ -30,41 +31,59 @@ const SessionListView = ({ hideSider, onChangeSession, sessions, currentSession,
         };
     }
     const { t } = useTranslation();
+    const SeesionItem = useCallback((_: number, session: session) => {
+        const timeUnit = formatTimestamp(session.updateTime);
+        const flag = `${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}` === tag;
+        if (!flag) {
+            tag = `${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}`;
+        }
+
+        return (
+            <>
+                {!flag &&
+                    <li className="ps-1 pb-1 text-xs text-neutral-500/75 opacity-60 tracking-wide select-none pointer-events-none">
+                        {`${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}`}
+                    </li>
+                }
+                <li
+                    className={`ps-3 pe-1 text-gray-600 ${session.uuid === currentSession ? "bg-neutral-200" : "bg-transparent"} ${hideSider ? "hidden" : ""} text-sm h-8 rounded-sm justify-between items-center flex me-1`}
+                    onClick={() => currentSession !== session.uuid && onChangeSession(session.uuid)}
+                    onContextMenu={handleContextMenu(session)}
+                    title={session.sessionName === "unname" ? t("unNamedSession") : session.sessionName}
+                // title={session.sessionName}
+                >
+                    <div
+                        className={`bg-transparent ${session.uuid === currentSession ? "cursor-default" : "cursor-pointer"} w-[98%] ${hideSider ? "hidden" : ""}  overflow-hidden text-ellipsis`}
+                    >
+                        <span className="text-nowrap select-none">
+                            {session.sessionName === "unname" ? t("unNamedSession") : session.sessionName}
+                            {/* {session.sessionName} */}
+                        </span>
+                    </div>
+                </li>
+            </>
+        )
+    }, [filter, currentSession]);
+
+    const getSessions = useCallback(() => {
+        return sessions.filter((session) => {
+            if (filter !== "") {
+                const sessionName = session.sessionName === "unname" ? t("unNamedSession") : session.sessionName;
+                return sessionName.toLocaleLowerCase().includes(filter.toLocaleLowerCase());
+            } else {
+                return true;
+            }
+        })
+    }, [sessions, filter]);
     return (
         <>
-            {sessions.map((session) => {
-                if (filter !== "") {
-                    const sessionName = session.sessionName === "unname" ? t("unNamedSession") : session.sessionName;
-                    if (!sessionName.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) {
-                        return null;
-                    }
-                }
-                const timeUnit = formatTimestamp(session.updateTime);
-                const flag = `${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}` === tag;
-                if (!flag) {
-                    tag = `${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}`;
-                }
-
-                return (
-                    <div key={session.uuid}>
-                        {!flag && <li className="ps-1 pb-1 text-xs text-neutral-500/75 opacity-60 tracking-wide select-none pointer-events-none">{`${timeUnit.tidx > 0 ? timeUnit.tidx : ""}${t(timeUnit.unit)}`}</li>}
-                        <li
-                            className={`ps-3 pe-1 text-gray-600 ${session.uuid === currentSession ? "bg-neutral-200" : "bg-transparent"} ${hideSider ? "hidden" : ""} text-sm h-8 rounded-sm justify-between items-center flex`}
-                            onClick={() => currentSession !== session.uuid && onChangeSession(session.uuid)}
-                            onContextMenu={handleContextMenu(session)}
-                            title={session.sessionName === "unname" ? t("unNamedSession") : session.sessionName}
-                        // title={session.sessionName}
-                        >
-                            <div className={`bg-transparent ${session.uuid === currentSession ? "cursor-default" : "cursor-pointer"} w-[98%] ${hideSider ? "hidden" : ""}  overflow-hidden text-ellipsis`}>
-                                <span className="text-nowrap select-none">
-                                    {session.sessionName === "unname" ? t("unNamedSession") : session.sessionName}
-                                    {/* {session.sessionName} */}
-                                </span>
-                            </div>
-                        </li>
-                    </div>
-                )
-            })}
+            <Virtuoso
+                data={getSessions()}
+                style={{ height: "100%", width: "100%" }}
+                overscan={10}
+                increaseViewportBy={{ top: 100, bottom: 100 }}
+                itemContent={SeesionItem}
+            />
             {contextMenu && <SessionItemContextMenu {...contextMenu}
                 onClose={() => {
                     setContextMenu(null);
@@ -97,8 +116,8 @@ export default function SessionItemList({ onChangeSession }: { onChangeSession: 
     }, []);
     return (
         <>
-            <div className="flex flex-col flex-1 w-full h-full overflow-y-auto overflow-x-hidden select-none">
-                <ul className={`flex flex-col text-[14px] gap-1 bg-transparent w-52 px-2  ${hideSider ? "hidden" : ""}`}>
+            <div className=" flex-1 w-full h-full overflow-y-auto overflow-x-hidden select-none">
+                <ul className={`text-[14px] h-full gap-1 bg-transparent w-52 ps-2  ${hideSider ? "hidden" : ""}`}>
                     <SessionListView
                         hideSider={hideSider}
                         onChangeSession={onChangeSession}

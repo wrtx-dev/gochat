@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { CircleX } from "lucide-react";
 import { Toggle } from "../ui/toggle";
 import { searchState } from "@renderer/lib/state/searchState";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId } from "react";
 
 export default function SearchBar() {
     const show = searchState(state => state.show);
