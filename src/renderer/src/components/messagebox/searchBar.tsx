@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { CircleX } from "lucide-react";
 import { Toggle } from "../ui/toggle";
 import { searchState } from "@renderer/lib/state/searchState";
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 
 export default function SearchBar() {
     const show = searchState(state => state.show);
@@ -20,23 +20,14 @@ export default function SearchBar() {
     const setIgnoreCase = searchState(state => state.setIgnoreCase);
     const { t } = useTranslation();
 
-    // useEffect(() => {
-    //     CSS.highlights.clear();
-    //     if (searchRange && searchRange.length > 0) {
-    //         const allHighlight = new Highlight(...searchRange);
-    //         CSS.highlights.set("search-matches", allHighlight);
-    //         if (currentIndex > -1 && searchRange[currentIndex]) {
-    //             const p = searchRange[currentIndex].startContainer.parentElement;
-    //             const hightlight = new Highlight(searchRange[currentIndex]);
-    //             CSS.highlights.set("current-match", hightlight);
-    //             p?.scrollIntoView({
-    //                 behavior: 'smooth',
-    //                 block: 'center',
-    //                 inline: 'nearest'
-    //             })
-    //         }
-    //     }
-    // }, [searchRange, currentIndex])
+
+    const id = useId();
+    useEffect(() => {
+        if (show) {
+            document.getElementById(id)?.focus();
+        }
+    }, [show]);
+
     return (
         <div className={`flex flex-row py-1 items-center w-full h-8 px-2 gap-2 bg-neutral-200/50 ${!show && "hidden"}`}>
             <Label
@@ -49,6 +40,7 @@ export default function SearchBar() {
             >
                 <Input
                     className="flex-1 h-3/4 px-1 focus-visible:ring-0 focus-visible:outline-0 rounded-sm focuse-visible:shadow-none shadow-none border-none focus-visible:border-none"
+                    id={id}
                     onChange={(e) => {
                         setQuery(e.target.value);
                     }}
@@ -59,7 +51,6 @@ export default function SearchBar() {
                     className="rounded-sm size-5 select-none text-xs font-light"
                     pressed={!ignoreCase}
                     onPressedChange={() => {
-                        console.log("set ignore case:", !ignoreCase);
                         setIgnoreCase(!ignoreCase);
                     }}
                 >
@@ -84,7 +75,7 @@ export default function SearchBar() {
             <Button
                 variant="outline"
                 className="rounded-sm px-0.5 h-6 text-xs"
-                disabled={searchRange === undefined || searchRange.length === 0 || currentIndex < 1}
+                disabled={searchRange === undefined || searchRange.length === 0}
                 onClick={() => {
                     subCurrentIndex();
                 }}
@@ -94,7 +85,7 @@ export default function SearchBar() {
             <Button
                 variant="outline"
                 className="rounded-sm px-0.5 h-6 text-xs"
-                disabled={searchRange === undefined || searchRange.length === 0 || currentIndex >= searchRange.length - 1}
+                disabled={searchRange === undefined || searchRange.length === 0}
                 onClick={() => {
                     addCurrentIndex();
                 }}

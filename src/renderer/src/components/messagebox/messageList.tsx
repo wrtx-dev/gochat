@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";
 import { saveFileDialog } from "@renderer/lib/util/misc";
 import { SearchMatch, searchState } from "@renderer/lib/state/searchState";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import SearchWrap from "./searchWrap";
 
 export default function MessageList() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -119,6 +120,8 @@ export default function MessageList() {
     const query = searchState(state => state.query);
     const setSearchRange = searchState(state => state.setSearchRange);
     const ignoreCase = searchState(state => state.ignoreCase);
+    const currentIndex = searchState(state => state.currentIndex);
+    const searchRange = searchState(state => state.searchRange);
     const searchMatches = useCallback(() => {
         const matches: SearchMatch[] = [];
         if (query) {
@@ -143,6 +146,9 @@ export default function MessageList() {
     }, [query, ignoreCase, messages]);
 
     useEffect(() => {
+        if (!query || query.length === 0) {
+            return;
+        }
         const timer = setTimeout(() => {
             const matches = searchMatches();
             setSearchRange(matches);
@@ -150,12 +156,54 @@ export default function MessageList() {
         return () => {
             clearTimeout(timer);
         }
-    }, [searchMatches]);
+    }, [searchMatches, query]);
+    const msgListRef = useRef<VirtuosoHandle>(null);
+
+    useEffect(() => {
+        if (msgListRef && msgListRef.current && searchRange !== undefined && searchRange.length > 0 && currentIndex > -1) {
+            if (currentIndex > 1 && searchRange[currentIndex] && searchRange[currentIndex - 1]) {
+                if (Math.abs(searchRange[currentIndex].listIndex - searchRange[currentIndex - 1].listIndex) > 2) {
+                    msgListRef.current.scrollToIndex(searchRange[currentIndex].listIndex);
+                }
+            } else {
+                msgListRef.current.scrollToIndex(searchRange[currentIndex].listIndex);
+            }
+        }
+    }, [currentIndex, searchRange])
+
+
+    const MessageItem = useCallback((index: number, msg: Message) => {
+        const idx = searchRange !== undefined && searchRange.length > 0 && currentIndex > -1 && searchRange[currentIndex] !== undefined && searchRange[currentIndex].listIndex === index ? searchRange[currentIndex].indexInMessage : -1;
+        return (
+            <div
+                className={`px-1 w-full`}
+            >
+
+                {query && query.length > 0
+                    ?
+                    <SearchWrap
+                        query={query}
+                        ignoreCase={ignoreCase}
+                        reverse={msg.role === "user"}
+                        idx={idx}
+                    >
+                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                    </SearchWrap>
+                    :
+                    <div className={`inline-flex w-full ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                    </div>
+                }
+
+            </div>
+        )
+    }, [query, ignoreCase, currentIndex])
 
     return (
         <div className="flex flex-col w-full h-full overflow-x-hidden overflow-y-auto flex-1 min-h-0 bg-white pb-2" ref={containerRef}>
 
             <Virtuoso
+                ref={msgListRef}
                 style={{ height: "100%", width: "100%" }}
                 data={messages}
                 overscan={2}
@@ -163,6 +211,7 @@ export default function MessageList() {
                 followOutput={() => {
                     return messages.length > 0 && messages[messages.length - 1].role === "user";
                 }}
+                // useWindowScroll={query !== undefined && query.length > 0}
                 components={{
                     Footer: () => {
                         return (
@@ -173,19 +222,7 @@ export default function MessageList() {
                         )
                     }
                 }}
-                itemContent={(_, msg) => {
-                    return (
-
-                        <>
-                            <div
-                                className={`px-1 ${msg.role === "user" ? "w-full inline-flex flex-row-reverse" : "w-full"}`}
-                            >
-                                {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
-                            </div>
-                        </>
-
-                    )
-                }}
+                itemContent={MessageItem}
             />
         </div>
     )
