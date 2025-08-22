@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { globalConfig } from "../state/confState";
 
 const oldFetch = window.fetch;
@@ -7,7 +7,8 @@ const oldFetch = window.fetch;
 export const fetchHooker = () => {
     const conf = globalConfig(conf => conf.config);
     const [hookIt, setHookIt] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const indexRef = useRef(0);
+    const apisRef = useRef(conf?.balanceApikeys || []);
 
     const balanceFetch = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
         try {
@@ -16,9 +17,9 @@ export const fetchHooker = () => {
             const headers = new Headers(requestInit.headers);
 
             // 仅当需要平衡API keys时才修改请求
-            if (headers.has("x-goog-api-key") && conf?.balanceApikeys?.length) {
-                const len = conf.balanceApikeys.length;
-                const currentApiKey = conf.balanceApikeys[currentIndex];
+            if (headers.has("x-goog-api-key") && apisRef.current.length > 0) {
+                const len = apisRef.current.length;
+                const currentApiKey = apisRef.current[indexRef.current];
 
                 // 修改API key和endpoint
                 headers.set("x-goog-api-key", currentApiKey.key);
@@ -29,7 +30,7 @@ export const fetchHooker = () => {
                 }
 
                 // 更新index (移除调试log)
-                setCurrentIndex(prev => (prev + 1) % len);
+                indexRef.current = (indexRef.current + 1) % len;
             }
 
             // 直接返回fetch的Promise，保持完全一致的异步行为
@@ -45,12 +46,20 @@ export const fetchHooker = () => {
             }
             return Promise.reject(new Error(String(e)));
         }
-    }, [conf?.balanceApikeys, currentIndex]);
+    }, []);
+
+    useEffect(() => {
+        apisRef.current = conf?.balanceApikeys || [];
+        indexRef.current = 0;
+    }, [conf?.balanceApikeys]);
 
     useEffect(() => {
         if (hookIt) {
             window.fetch = balanceFetch;
         } else {
+            window.fetch = oldFetch;
+        }
+        return () => {
             window.fetch = oldFetch;
         }
     }, [hookIt, balanceFetch]);
