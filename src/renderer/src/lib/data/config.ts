@@ -69,6 +69,7 @@ export interface Config {
     apikeys?: ApikeyInfo[],
     balanceApikeys?: ApikeyInfo[],
     ApiKeyInuse?: ApikeyInfo,
+    withHistories?: number,
 }
 
 export enum historySessionModel {

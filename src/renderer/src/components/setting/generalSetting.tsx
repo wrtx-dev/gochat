@@ -144,39 +144,7 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         }} />
                 </div>
             </div>
-            {/* <div className="setting-item-row">
-                <span className="setting-item-label">{t("apiKey")}</span>
-                <Input className="col-span-6 input-comm"
-                    value={conf.apikey}
-                    onChange={(e) => setConf((prev) => ({
-                        ...prev,
-                        apikey: e.target.value
-                    }))}
-                    onBlur={models && models.length > 0 ? undefined : () => {
-                        if (!models || models.length === 0) {
-                            (async () => {
-                                await refleshModels();
-                                const models = await getModelsList();
-                                setGlobalModels(models);
-                            })();
-                        }
-                    }}
-                />
-            </div> */}
-            {/* <div className="setting-item-row">
-                <span className="setting-item-label">{t("provider")}</span>
-                <Input className="col-span-6 input-comm" value={conf.provider || ""} onChange={(e) => setConf((prev) => ({
-                    ...prev,
-                    provider: e.target.value
-                }))} />
-            </div>
-            <div className="setting-item-row">
-                <span className="setting-item-label">{t("endpoint")}</span>
-                <Input className="col-span-6 input-comm" value={conf.endPoint || ""} onChange={(e) => setConf((prev) => ({
-                    ...prev,
-                    endPoint: e.target.value
-                }))} />
-            </div> */}
+
             <div className="setting-item-row">
                 <span className="setting-item-label">{t("roleSettings")}</span>
                 <Textarea className="col-span-6 textarea-comm" value={conf.systemInstruction} onChange={(e) => setConf((prev) => ({
@@ -258,6 +226,17 @@ const GeneralSetting = forwardRef(({ config }: { config: Config }, ref: Ref<any>
                         </SelectContent>
                     </Select>
                 </div>
+            </div>
+            <div className="setting-item-row gap-3">
+                <span className="col-span-2 w-full text-sm select-none cursor-default">{t("general.contextNumer")}</span>
+                <Slider
+                    step={1}
+                    value={conf.withHistories ? [conf.withHistories] : [0]}
+                    onValueChange={(v) => setConf((state) => ({ ...state, withHistories: v[0] === 0 ? undefined : v[0] }))}
+                    max={20}
+                    className="col-span-5"
+                />
+                <span className="col-span-1 w-full inline-flex flex-row items-center justify-center">{conf.withHistories ? conf.withHistories : t("general.unlimit")}</span>
             </div>
             <div className="w-full inline-flex gap-2 items-center">
                 <Checkbox checked={conf.autoGenSessionName} onCheckedChange={(v) => setConf((state) => ({ ...state, autoGenSessionName: v as boolean }))} />

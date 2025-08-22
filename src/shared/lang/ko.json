@@ -135,7 +135,9 @@
     "createQuickWindow": "빠른 창 생성",
     "showQuickWin": "빠른 창 사용법 표시",
     "autoDelteSession": "세션 자동 삭제, 세션 보존",
-    "days": "일"
+    "days": "일",
+    "contextNumer": "컨텍스트 메시지 수",
+    "unlimit": "무제한"
   },
   "conf": {
     "addApikey": "API 키 추가",

@@ -126,7 +126,7 @@
     "thoughtSetting": "思考モード設定",
     "disableThought": "思考を無効にする",
     "thoughtNotice": "gemini-2.5-proは思考モードを無効にできません、最小思考予算は128トークンです",
-    "dynThought": "動的思考",
+    "dynThought": "動の思考",
     "thoughtCost": "思考予算",
     "thoughtCostInfo": "gemini-2.5-proは思考モードを無効にできません、最小思考予算は128トークンです、この値より小さい値を設定した場合、モデルがgemini-2.5-proシリーズの場合は128トークンの予算に設定されます",
     "namedSessionModel": "セッション命名モデル",
@@ -135,7 +135,9 @@
     "createQuickWindow": "クイックウィンドウを作成",
     "showQuickWin": "クイックウィンドウの使用法を表示",
     "autoDelteSession": "セッションを自動削除、セッション保持",
-    "days": "日"
+    "days": "日",
+    "contextNumer": "コンテキストメッセージ数",
+    "unlimit": "無制限"
   },
   "conf": {
     "addApikey": "APIキーを追加",

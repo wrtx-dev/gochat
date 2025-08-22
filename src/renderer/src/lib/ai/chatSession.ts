@@ -131,8 +131,44 @@ export class ChatSession {
         }
     }
 
+    private getHistoiesMessages() {
+        if (this.conf.withHistories === undefined || !this.chatSession) {
+            return this.chatSession ? this.chatSession.getHistory() : [];
+        }
+        let lens = this.chatSession.getHistory().length;
+        if (this.chatSession.getHistory()[lens - 1].role === "user") {
+            return this.chatSession.getHistory();
+        }
+        let count = 0;
+        let role = this.chatSession.getHistory()[lens - 1].role;
+        for (; lens >= 1; lens--) {
+            if (this.chatSession.getHistory()[lens - 1].role !== role) {
+                role = this.chatSession.getHistory()[lens - 1].role;
+                if (role === "user") {
+                    count++;
+                }
+            }
+            if (count < this.conf.withHistories) {
+                continue;
+            }
+            break;
+        }
+        if (count >= this.conf.withHistories) {
+            return this.chatSession.getHistory().slice(lens - 1);
+        }
+        return this.chatSession.getHistory();
+    }
+
     public async sendMessageStream(message: string | Part[], abortSignal?: AbortController) {
         if (this.chatSession) {
+            if (this.conf.withHistories !== undefined && this.chatSession.getHistory().length > 0) {
+                const histories = this.getHistoiesMessages();
+                //we have to recreate the session to change the history
+                this.chatSession = this.client.chats.create({
+                    ...this.chatParameters,
+                    history: histories,
+                });
+            }
             return this.chatSession.sendMessageStream({
                 message: message,
                 config: {

@@ -135,7 +135,9 @@
     "createQuickWindow": "Create quick window",
     "showQuickWin": "Show quick window usage",
     "autoDelteSession": "Auto delete session, session retention",
-    "days": "days"
+    "days": "days",
+    "contextNumer": "Context message count",
+    "unlimit": "Unlimited"
   },
   "conf": {
     "addApikey": "Add ApiKey",

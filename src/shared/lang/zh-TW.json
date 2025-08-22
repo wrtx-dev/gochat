@@ -128,7 +128,9 @@
         "createQuickWindow": "創建快捷視窗",
         "showQuickWin": "顯示快捷視窗使用",
         "autoDelteSession": "自動刪除會話，會話保留",
-        "days": "天"
+        "days": "天",
+        "contextNumer": "上下文消息數",
+        "unlimit": "不限制"
     },
     "conf": {
         "addApikey": "添加API密鑰",

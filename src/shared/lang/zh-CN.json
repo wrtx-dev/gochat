@@ -128,7 +128,9 @@
     "createQuickWindow": "创建快捷窗口",
     "showQuickWin": "显示快捷窗口使用",
     "autoDelteSession": "自动删除会话，会话保留",
-    "days": "天"
+    "days": "天",
+    "contextNumer": "上下文消息数",
+    "unlimit": "不限制"
   },
   "quote": "引用",
   "exportMD": "导出markdown",
