@@ -10,12 +10,12 @@ import { uiState } from "@renderer/lib/state/uistate";
 import { useTranslation } from "react-i18next";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";
 import { saveFileDialog } from "@renderer/lib/util/misc";
-import { searchState } from "@renderer/lib/state/searchState";
+import { SearchMatch, searchState } from "@renderer/lib/state/searchState";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import SearchWrap from "./searchWrap";
 
 export default function MessageList() {
     const [messages, setMessages] = useState<Message[]>([]);
-    const lastUserMsgRef = useRef<HTMLDivElement>(null);
-    const lastAssistantMsgRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const currentSessionID = uiState((state) => state.currentSessionID);
     const messageCanncel = uiState(state => state.messageCancel);
@@ -76,7 +76,6 @@ export default function MessageList() {
         });
         registerClearMessages(() => {
             setMessages([]);
-            setSpaceHeight(0);
         });
         registerLoadMessageList((messages: Message[], id: string) => {
             if (id !== currentSessionID) {
@@ -98,11 +97,16 @@ export default function MessageList() {
     }, []);
     useLayoutEffect(() => {
         if (loaded) {
+
             requestAnimationFrame(() => {
-                containerRef.current?.scrollTo({
-                    top: containerRef.current?.scrollHeight,
-                    behavior: "instant"
-                });
+                if (msgListRef && msgListRef.current) {
+                    console.log("request to scroll")
+                    msgListRef.current.scrollToIndex({
+                        align: "end",
+                        index: "LAST",
+                    });
+                }
+
             });
 
             setLoaded(false);
@@ -117,111 +121,129 @@ export default function MessageList() {
         }
     }, [storeSessionID]);
 
-    const [spaceHeight, setSpaceHeight] = useState(0);
-    const adjustSpaceHeight = useCallback(() => {
-        if (messages.length > 0 && containerRef.current) {
-            if (messages[messages.length - 1].role === "user" && lastUserMsgRef.current) {
-                const newHeight = containerRef.current.clientHeight - lastUserMsgRef.current.clientHeight;
-                setSpaceHeight(newHeight > 0 ? newHeight : 0);
-                requestAnimationFrame(() => {
-                    if (lastUserMsgRef.current) {
-                        lastUserMsgRef.current.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                            inline: "nearest"
-                        });
-                    }
-                });
-            } else if (messages[messages.length - 1].role !== "user" && lastAssistantMsgRef.current && spaceHeight > 0) {
-                const newHeight = containerRef.current.clientHeight - lastAssistantMsgRef.current.clientHeight;
-                setSpaceHeight(newHeight > 0 ? newHeight : 0);
-            }
-        }
-    }, [messages, lastAssistantMsgRef, lastUserMsgRef]);
-
-    useLayoutEffect(() => {
-        adjustSpaceHeight();
-    }, [messages, adjustSpaceHeight]);
 
     const query = searchState(state => state.query);
     const setSearchRange = searchState(state => state.setSearchRange);
     const ignoreCase = searchState(state => state.ignoreCase);
-    const search = useCallback(() => {
-        const ranges: Range[] = [];
-        if (query && containerRef && containerRef.current) {
+    const currentIndex = searchState(state => state.currentIndex);
+    const searchRange = searchState(state => state.searchRange);
+    const searchMatches = useCallback(() => {
+        const matches: SearchMatch[] = [];
+        if (query) {
             const regexp = new RegExp(query, ignoreCase && /^[a-zA-Z\.\s]+$/.test(query) ? "gi" : "g");
-            let fullText = "";
-            const walker = document.createTreeWalker(containerRef.current, NodeFilter.SHOW_TEXT);
-            let allNodeInfos: { node: Node, startOffset: number }[] = [];
-            while (walker.nextNode()) {
 
-                allNodeInfos.push({
-                    node: walker.currentNode,
-                    startOffset: fullText.length,
-                });
-                fullText += walker.currentNode.nodeValue;
-            }
-
-            let match: RegExpExecArray | null = null;
-
-            while ((match = regexp.exec(fullText))) {
-                const matchStart = match.index;
-                const matchEnd = matchStart + match[0].length;
-                let startNode: Node | null = null;
-                let endNode: Node | null = null;
-                let startOffset = 0;
-                let endOffset = 0;
-                for (const n of allNodeInfos) {
-                    if (matchStart >= n.startOffset && matchStart < (n.node.nodeValue?.length ?? 0) + n.startOffset) {
-                        startNode = n.node;
-                        startOffset = matchStart - n.startOffset;
-                        break;
-                    }
+            messages.forEach((msg, idx) => {
+                const text = msg.message + (msg.renderedContent || "");
+                let match: RegExpExecArray | null;
+                let matchIndex = 0;
+                while ((match = regexp.exec(text))) {
+                    matches.push({
+                        listIndex: idx,
+                        start: match.index,
+                        end: match.index + match[0].length,
+                        indexInMessage: matchIndex
+                    });
+                    matchIndex++;
                 }
-                for (const n of allNodeInfos) {
-                    if (matchEnd > n.startOffset && matchEnd <= n.startOffset + (n.node.nodeValue?.length ?? 0)) {
-                        endNode = n.node;
-                        endOffset = matchEnd - n.startOffset;
-                        break;
-                    }
-                }
-                if (startNode && endNode) {
-                    const range = new Range();
-                    range.setStart(startNode, startOffset);
-                    range.setEnd(endNode, endOffset);
-                    ranges.push(range);
-                }
-            }
+            });
         }
-        return ranges.length > 0 ? ranges : undefined;
-    }, [query, ignoreCase]);
+        return matches.length > 0 ? matches : undefined;
+    }, [query, ignoreCase, messages]);
+
     useEffect(() => {
+        if (!query || query.length === 0) {
+            return;
+        }
         const timer = setTimeout(() => {
-            const ranges = search();
-            setSearchRange(ranges);
+            const matches = searchMatches();
+            setSearchRange(matches);
         }, 100);
         return () => {
             clearTimeout(timer);
         }
-    }, [search]);
+    }, [searchMatches, query]);
+    const msgListRef = useRef<VirtuosoHandle>(null);
+
+    useEffect(() => {
+        if (msgListRef && msgListRef.current && searchRange !== undefined && searchRange.length > 0 && currentIndex > -1) {
+            if (currentIndex > 1 && searchRange[currentIndex] && searchRange[currentIndex - 1]) {
+                if (Math.abs(searchRange[currentIndex].listIndex - searchRange[currentIndex - 1].listIndex) > 2) {
+                    msgListRef.current.scrollToIndex(searchRange[currentIndex].listIndex);
+                }
+            } else {
+                msgListRef.current.scrollToIndex(searchRange[currentIndex].listIndex);
+            }
+        }
+    }, [currentIndex, searchRange])
+
+
+    const MessageItem = useCallback((index: number, msg: Message) => {
+        const idx = searchRange !== undefined && searchRange.length > 0 && currentIndex > -1 && searchRange[currentIndex] !== undefined && searchRange[currentIndex].listIndex === index ? searchRange[currentIndex].indexInMessage : -1;
+        return (
+            <div
+                className={`px-1 w-full`}
+            >
+
+                {query && query.length > 0
+                    ?
+                    <SearchWrap
+                        query={query}
+                        ignoreCase={ignoreCase}
+                        reverse={msg.role === "user"}
+                        idx={idx}
+                    >
+                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                    </SearchWrap>
+                    :
+                    <div className={`inline-flex w-full ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
+                    </div>
+                }
+
+            </div>
+        )
+    }, [query, ignoreCase, currentIndex]);
+
+    // const followOutput = useCallback((isBottom: boolean) => {
+    //     if (!isBottom) {
+    //         console.log("followOutput:", messages.length > 0 && messages[messages.length - 1].role === "user")
+    //         return messages.length > 2 && messages[messages.length - 1].role === "user";
+    //     }
+    //     console.log("followOutput2:", false);
+    //     return false;
+
+    // }, [messages.length])
+    useLayoutEffect(() => {
+        if (msgListRef && msgListRef.current && messages && messages.length > 2 && messages[messages.length - 1].role === "user") {
+            msgListRef.current.scrollToIndex({
+                align: "end",
+                index: messages.length - 1,
+                behavior: "smooth"
+            });
+        }
+    }, [messages])
 
     return (
         <div className="flex flex-col w-full h-full overflow-x-hidden overflow-y-auto flex-1 min-h-0 bg-white pb-2" ref={containerRef}>
 
-            {messages.map((msg, idx) => {
-                const userLast = msg.role === "user" && (idx === messages.length - 1);
-                const assistantLast = msg.role !== "user" && idx === messages.length - 1;
-                return (
-
-                    <div key={msg.id} className={`px-1 ${msg.role === "user" ? "w-full inline-flex flex-row-reverse" : "w-full"}`}
-                        ref={userLast ? lastUserMsgRef : assistantLast ? lastAssistantMsgRef : null}>
-                        {msg.role !== "user" ? <AssistentMessage finished={msg.finished} msg={msg} /> : <UserMessage msg={msg} />}
-                    </div>
-
-                )
-            })}
-            {messageCanncel.get(currentSessionID) !== undefined && <WaitAssistantMessage />}
-            <div className="w-full" style={{ minHeight: `${spaceHeight}px` }} />
+            <Virtuoso
+                ref={msgListRef}
+                style={{ height: "100%", width: "100%", scrollbarGutter: "stable" }}
+                data={messages}
+                overscan={4}
+                increaseViewportBy={{ top: 1000, bottom: 1000 }}
+                components={{
+                    Footer: () => {
+                        return (
+                            <>
+                                {messageCanncel.get(currentSessionID) !== undefined && <WaitAssistantMessage />}
+                                <div className={`w-full`} style={{ minHeight: `${(containerRef.current?.offsetHeight ?? 2) / 2}px` }} />
+                            </>
+                        )
+                    }
+                }}
+                itemContent={MessageItem}
+            />
         </div>
     )
 }
@@ -244,7 +266,7 @@ const AssistentMessage = memo(({ msg, finished, ...props }: { msg: Message, fini
         return msg.message;
     }
     return (
-        <div className="flex flex-col w-full mt-2 px-2 text-gray-600" {...props}>
+        <div className="flex flex-col w-full mt-2 min-h-0.5 px-2 text-gray-600" {...props}>
             {(msg.thinking && msg.message) && <ThoughtBlock thought={msg.thinking} thinking={msg.message.length < 1 && !msg.isError && !msg.finished} />}
             {(msg.message && msg.message.length > 0) &&
                 <div className="flex flex-col w-full" ref={msgRef}>
@@ -366,7 +388,7 @@ const UserMessage = memo(({ msg }: { msg: Message }) => {
         return msg.message;
     }
     return (
-        <div className="inline-block max-w-2/3 break-all overflow-hidden">
+        <div className="inline-block max-w-2/3 break-all overflow-hidden min-h-0.5">
             <div className="flex flex-col mt-2 px-2 max-w-full bg-neutral-200/50 items-center justify-center rounded-sm" ref={msgRef}>
                 <ContextMenu>
                     <ContextMenuTrigger>

@@ -243,10 +243,10 @@ body{
     Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
-::highlight(search-matches) {
+.matches{
     @apply bg-yellow-200 text-black;
 }
 
-::highlight(current-match){
+.match-current{
     @apply bg-amber-500 text-black;
 }
